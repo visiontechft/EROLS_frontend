@@ -1,3 +1,5 @@
+// Fichier types.ts complet avec les modifications
+
 // User types
 export interface User {
   id: number;
@@ -23,13 +25,16 @@ export interface LoginCredentials {
   password: string;
 }
 
+// MODIFIÉ - RegisterData adapté pour l'API backend
 export interface RegisterData {
   email: string;
+  phone: string;
+  whatsapp?: string;
+  address: string;
+  city: string;
   password: string;
   password_confirmation: string;
-  first_name: string;
-  last_name: string;
-  phone?: string;
+  terms?: boolean;
 }
 
 // Product types

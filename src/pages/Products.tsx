@@ -32,9 +32,16 @@ export function Products() {
     const fetchCategories = async () => {
       try {
         const data = await categoriesApi.getCategories();
-        setCategories(data);
+        
+        // Gérer le cas où data est un objet paginé ou un tableau
+        const categoriesArray = Array.isArray(data) 
+          ? data 
+          : (data.data || data.results || []);
+        
+        setCategories(categoriesArray);
       } catch (error) {
         console.error('Error fetching categories:', error);
+        toast.error('Erreur lors du chargement des catégories');
       }
     };
 
@@ -166,7 +173,7 @@ export function Products() {
                       Toutes les catégories
                     </span>
                   </label>
-                  {categories.map((category) => (
+                  {Array.isArray(categories) && categories.map((category) => (
                     <label key={category.id} className="flex items-center">
                       <input
                         type="radio"
