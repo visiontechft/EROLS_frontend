@@ -88,9 +88,9 @@ export function ProductDetail() {
     return null;
   }
 
-  const images = product.images.sort((a, b) => a.order - b.order);
+  const images = product.images?.sort((a, b) => a.order - b.order) || [];
   const currentImage = images[selectedImageIndex] || images[0];
-  const hasDiscount = product.original_price && product.original_price > product.price;
+  const hasDiscount = product.original_price && product.original_price > (product.price || 0);
   const inCartQuantity = getItemQuantity(product.id);
 
   return (
@@ -107,10 +107,10 @@ export function ProductDetail() {
           </Link>
           <span>/</span>
           <Link
-            to={`/produits?category=${product.category.slug}`}
+            to={`/produits?category=${product.category?.slug}`}
             className="hover:text-orange-500"
           >
-            {product.category.name}
+            {product.category?.name || 'Catégorie'}
           </Link>
           <span>/</span>
           <span className="text-gray-900">{product.name}</span>
@@ -134,7 +134,7 @@ export function ProductDetail() {
                 )}
                 {product.is_featured && <Badge variant="primary">Vedette</Badge>}
                 {hasDiscount && (
-                  <Badge variant="success">-{product.discount_percentage}%</Badge>
+                  <Badge variant="success">-{product.discount_percentage || 0}%</Badge>
                 )}
               </div>
 
@@ -194,10 +194,10 @@ export function ProductDetail() {
             {/* Title and Category */}
             <div>
               <Link
-                to={`/produits?category=${product.category.slug}`}
+                to={`/produits?category=${product.category?.slug}`}
                 className="text-sm text-orange-500 hover:text-orange-600 font-medium"
               >
-                {product.category.name}
+                {product.category?.name || 'Catégorie'}
               </Link>
               <h1 className="text-3xl font-bold text-gray-900 mt-2">
                 {product.name}
@@ -233,17 +233,17 @@ export function ProductDetail() {
             {/* Price */}
             <div className="flex items-baseline gap-3">
               <span className="text-4xl font-bold text-orange-500">
-                {product.price.toLocaleString('fr-FR')} FCFA
+                {(product.price || 0).toLocaleString('fr-FR')} FCFA
               </span>
               {hasDiscount && (
                 <span className="text-xl text-gray-400 line-through">
-                  {product.original_price?.toLocaleString('fr-FR')} FCFA
+                  {(product.original_price || 0).toLocaleString('fr-FR')} FCFA
                 </span>
               )}
             </div>
 
             {/* Stock Status */}
-            <StockBadge stock={product.stock} />
+            <StockBadge stock={product.stock || 0} />
 
             {/* Description */}
             <div className="prose prose-sm max-w-none">
@@ -271,7 +271,7 @@ export function ProductDetail() {
             )}
 
             {/* Quantity Selector */}
-            {product.is_available && product.stock > 0 && (
+            {product.is_available && (product.stock || 0) > 0 && (
               <div className="flex items-center gap-4">
                 <label className="text-sm font-medium text-gray-700">
                   Quantité:
@@ -288,7 +288,7 @@ export function ProductDetail() {
                   </span>
                   <button
                     onClick={() =>
-                      setQuantity((q) => Math.min(product.stock, q + 1))
+                      setQuantity((q) => Math.min(product.stock || 0, q + 1))
                     }
                     className="px-4 py-2 hover:bg-gray-100 transition-colors"
                   >
@@ -310,7 +310,7 @@ export function ProductDetail() {
                   size="lg"
                   fullWidth
                   onClick={handleAddToCart}
-                  disabled={!product.is_available || product.stock === 0}
+                  disabled={!product.is_available || (product.stock || 0) === 0}
                   leftIcon={<ShoppingCart className="h-5 w-5" />}
                 >
                   Ajouter au panier
@@ -329,7 +329,7 @@ export function ProductDetail() {
                 variant="secondary"
                 fullWidth
                 onClick={handleBuyNow}
-                disabled={!product.is_available || product.stock === 0}
+                disabled={!product.is_available || (product.stock || 0) === 0}
               >
                 Acheter maintenant
               </Button>

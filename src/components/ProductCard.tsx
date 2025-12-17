@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Star, Eye } from 'lucide-react';
+import { ShoppingCart, Star, Eye, Package } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Badge, StockBadge } from './ui/Badge';
 import { useCart } from '../contexts/CartContext';
@@ -29,7 +29,7 @@ export function ProductCard({
     onQuickView?.(product);
   };
 
-  const primaryImage = product.images.find((img) => img.is_primary) || product.images[0];
+  const primaryImage = product.images?.find((img) => img.is_primary) || product.images?.[0];
   const hasDiscount = product.original_price && product.original_price > product.price;
 
   return (
@@ -82,7 +82,7 @@ export function ProductCard({
       <div className="p-4 flex flex-col flex-grow">
         {/* Category */}
         <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
-          {product.category.name}
+          {product.category?.name || 'Sans catégorie'}
         </p>
 
         {/* Product Name */}
@@ -110,11 +110,11 @@ export function ProductCard({
           <div className="flex flex-col">
             {hasDiscount && (
               <span className="text-xs text-gray-400 line-through">
-                {product.original_price?.toLocaleString('fr-FR')} FCFA
+                {(product.original_price || 0).toLocaleString('fr-FR')} FCFA
               </span>
             )}
             <span className="text-lg font-bold text-orange-500">
-              {product.price.toLocaleString('fr-FR')} FCFA
+              {(product.price || 0).toLocaleString('fr-FR')} FCFA
             </span>
           </div>
 
@@ -136,14 +136,14 @@ export function ProductCard({
 
 // Product Grid Component
 interface ProductGridProps {
-  products: Product[];
+  products?: Product[];
   isLoading?: boolean;
   showQuickView?: boolean;
   onQuickView?: (product: Product) => void;
 }
 
 export function ProductGrid({
-  products,
+  products = [],
   isLoading = false,
   showQuickView,
   onQuickView,
@@ -168,10 +168,30 @@ export function ProductGrid({
     );
   }
 
+  // Vérification de sécurité pour products
+  if (!products || !Array.isArray(products)) {
+    return (
+      <div className="text-center py-12">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+          <Package className="h-8 w-8 text-gray-400" />
+        </div>
+        <p className="text-gray-500 text-lg">Aucun produit disponible</p>
+      </div>
+    );
+  }
+
   if (products.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500 text-lg">Aucun produit trouvé</p>
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+          <Package className="h-8 w-8 text-gray-400" />
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          Aucun produit trouvé
+        </h3>
+        <p className="text-gray-600">
+          Essayez de modifier vos critères de recherche
+        </p>
       </div>
     );
   }

@@ -82,56 +82,95 @@ const handleApiCall = async <T>(
 
 // Authentication API
 export const authApi = {
-  // Login
+  // Login - Transforme email en username pour le backend
   login: async (credentials: LoginCredentials): Promise<AuthUser> => {
-    return handleApiCall(() =>
-      apiClient.post<ApiResponse<AuthUser>>('/auth/login', credentials)
-    );
+    // Le backend attend username/password, mais le frontend utilise email/password
+    const loginData = {
+      username: credentials.email, // Utiliser l'email comme username
+      password: credentials.password,
+    };
+    
+    const response = await apiClient.post('/users/login/', loginData);
+    
+    // Stocker le token
+    if (response.data.access) {
+      localStorage.setItem('auth_token', response.data.access);
+      localStorage.setItem('refresh_token', response.data.refresh);
+      localStorage.setItem('auth_user', JSON.stringify(response.data.user));
+    }
+    
+    return {
+      user: response.data.user,
+      token: response.data.access,
+    };
   },
 
-  // Register
+  // Register - Transforme les données pour le backend
   register: async (data: RegisterData): Promise<AuthUser> => {
-    return handleApiCall(() =>
-      apiClient.post<ApiResponse<AuthUser>>('/auth/register', data)
-    );
+    // Transformer les données pour correspondre à l'API backend
+    const registerData = {
+      username: data.email.split('@')[0], // Générer username depuis email
+      email: data.email,
+      phone: data.phone,
+      password: data.password,
+      password2: data.password, // Le backend attend password2
+      user_type: 'client',
+      whatsapp: data.whatsapp || data.phone,
+      address: data.address,
+      city: data.city,
+    };
+    
+    const response = await apiClient.post('/users/register/', registerData);
+    
+    // Le backend retourne juste l'utilisateur créé, pas de token
+    // On doit se connecter ensuite
+    if (response.data) {
+      // Auto-login après inscription
+      return await authApi.login({
+        email: data.email,
+        password: data.password,
+      });
+    }
+    
+    throw new Error('Erreur lors de l\'inscription');
   },
 
-  // Logout
+  // Logout - SLASH AJOUTÉ
   logout: async (): Promise<void> => {
     return handleApiCall(() =>
-      apiClient.post<ApiResponse<void>>('/auth/logout')
+      apiClient.post<ApiResponse<void>>('/users/logout/')
     );
   },
 
-  // Get current user
+  // Get current user - SLASH AJOUTÉ
   getCurrentUser: async (): Promise<User> => {
     return handleApiCall(() =>
-      apiClient.get<ApiResponse<User>>('/auth/user')
+      apiClient.get<ApiResponse<User>>('/users/me/')
     );
   },
 
-  // Update profile
+  // Update profile - SLASH AJOUTÉ
   updateProfile: async (data: Partial<User>): Promise<User> => {
     return handleApiCall(() =>
-      apiClient.put<ApiResponse<User>>('/auth/profile', data)
+      apiClient.put<ApiResponse<User>>('/users/profile/', data)
     );
   },
 
-  // Change password
+  // Change password - SLASH AJOUTÉ
   changePassword: async (data: {
     current_password: string;
     password: string;
     password_confirmation: string;
   }): Promise<void> => {
     return handleApiCall(() =>
-      apiClient.post<ApiResponse<void>>('/auth/change-password', data)
+      apiClient.post<ApiResponse<void>>('/users/change-password/', data)
     );
   },
 };
 
 // Products API
 export const productsApi = {
-  // Get all products with filters
+  // Get all products with filters - SLASH AJOUTÉ
   getProducts: async (
     filters?: ProductFilters
   ): Promise<PaginatedResponse<Product>> => {
@@ -144,30 +183,30 @@ export const productsApi = {
       });
     }
     const response = await apiClient.get<PaginatedResponse<Product>>(
-      '/products',
+      '/products/',
       { params }
     );
     return response.data;
   },
 
-  // Get single product by slug
+  // Get single product by slug - SLASH AJOUTÉ
   getProduct: async (slug: string): Promise<Product> => {
     return handleApiCall(() =>
-      apiClient.get<ApiResponse<Product>>(`/products/${slug}`)
+      apiClient.get<ApiResponse<Product>>(`/products/${slug}/`)
     );
   },
 
-  // Get featured products
+  // Get featured products - SLASH AJOUTÉ
   getFeaturedProducts: async (): Promise<Product[]> => {
     return handleApiCall(() =>
-      apiClient.get<ApiResponse<Product[]>>('/products/featured')
+      apiClient.get<ApiResponse<Product[]>>('/products/featured/')
     );
   },
 
-  // Search products
+  // Search products - SLASH AJOUTÉ
   searchProducts: async (query: string): Promise<Product[]> => {
     return handleApiCall(() =>
-      apiClient.get<ApiResponse<Product[]>>('/products/search', {
+      apiClient.get<ApiResponse<Product[]>>('/products/search/', {
         params: { q: query },
       })
     );
@@ -176,21 +215,46 @@ export const productsApi = {
 
 // Categories API
 export const categoriesApi = {
-  // Get all categories
+  // Get all categories - SLASH AJOUTÉ
   getCategories: async (): Promise<Category[]> => {
-    return handleApiCall(() =>
-      apiClient.get<ApiResponse<Category[]>>('/products/categories')
-    );
+    try {
+      const response = await apiClient.get('/products/categories/');
+      
+      // Gérer différents formats de réponse possibles
+      const data = response.data;
+      
+      // Si c'est déjà un tableau
+      if (Array.isArray(data)) {
+        return data;
+      }
+      
+      // Si c'est un objet avec data
+      if (data.data && Array.isArray(data.data)) {
+        return data.data;
+      }
+      
+      // Si c'est un objet avec results
+      if (data.results && Array.isArray(data.results)) {
+        return data.results;
+      }
+      
+      // Fallback: retourner un tableau vide
+      console.warn('Format de catégories inattendu:', data);
+      return [];
+    } catch (error) {
+      console.error('Erreur lors de la récupération des catégories:', error);
+      throw error;
+    }
   },
 
-  // Get single category
+  // Get single category - SLASH AJOUTÉ
   getCategory: async (slug: string): Promise<Category> => {
     return handleApiCall(() =>
-      apiClient.get<ApiResponse<Category>>(`/categories/${slug}`)
+      apiClient.get<ApiResponse<Category>>(`/categories/${slug}/`)
     );
   },
 
-  // Get products by category
+  // Get products by category - SLASH AJOUTÉ
   getCategoryProducts: async (
     slug: string,
     filters?: ProductFilters
@@ -204,7 +268,7 @@ export const categoriesApi = {
       });
     }
     const response = await apiClient.get<PaginatedResponse<Product>>(
-      `/categories/${slug}/products`,
+      `/categories/${slug}/products/`,
       { params }
     );
     return response.data;
@@ -213,98 +277,98 @@ export const categoriesApi = {
 
 // Orders API
 export const ordersApi = {
-  // Create order
+  // Create order - SLASH AJOUTÉ
   createOrder: async (data: CreateOrderData): Promise<Order> => {
     return handleApiCall(() =>
-      apiClient.post<ApiResponse<Order>>('/orders', data)
+      apiClient.post<ApiResponse<Order>>('/orders/', data)
     );
   },
 
-  // Get user orders
+  // Get user orders - SLASH AJOUTÉ
   getOrders: async (): Promise<Order[]> => {
     return handleApiCall(() =>
-      apiClient.get<ApiResponse<Order[]>>('/orders')
+      apiClient.get<ApiResponse<Order[]>>('/orders/')
     );
   },
 
-  // Get single order
+  // Get single order - SLASH AJOUTÉ
   getOrder: async (id: number): Promise<Order> => {
     return handleApiCall(() =>
-      apiClient.get<ApiResponse<Order>>(`/orders/${id}`)
+      apiClient.get<ApiResponse<Order>>(`/orders/${id}/`)
     );
   },
 
-  // Cancel order
+  // Cancel order - SLASH AJOUTÉ
   cancelOrder: async (id: number): Promise<Order> => {
     return handleApiCall(() =>
-      apiClient.post<ApiResponse<Order>>(`/orders/${id}/cancel`)
+      apiClient.post<ApiResponse<Order>>(`/orders/${id}/cancel/`)
     );
   },
 
-  // Get order by number
+  // Get order by number - SLASH AJOUTÉ
   getOrderByNumber: async (orderNumber: string): Promise<Order> => {
     return handleApiCall(() =>
-      apiClient.get<ApiResponse<Order>>(`/orders/number/${orderNumber}`)
+      apiClient.get<ApiResponse<Order>>(`/orders/number/${orderNumber}/`)
     );
   },
 };
 
 // Special Requests API
 export const specialRequestsApi = {
-  // Create special request
+  // Create special request - SLASH AJOUTÉ
   createRequest: async (
     data: CreateSpecialRequestData
   ): Promise<SpecialRequest> => {
     return handleApiCall(() =>
-      apiClient.post<ApiResponse<SpecialRequest>>('/special-requests', data)
+      apiClient.post<ApiResponse<SpecialRequest>>('/special-requests/', data)
     );
   },
 
-  // Get user special requests
+  // Get user special requests - SLASH AJOUTÉ
   getRequests: async (): Promise<SpecialRequest[]> => {
     return handleApiCall(() =>
-      apiClient.get<ApiResponse<SpecialRequest[]>>('/special-requests')
+      apiClient.get<ApiResponse<SpecialRequest[]>>('/special-requests/')
     );
   },
 
-  // Get single special request
+  // Get single special request - SLASH AJOUTÉ
   getRequest: async (id: number): Promise<SpecialRequest> => {
     return handleApiCall(() =>
-      apiClient.get<ApiResponse<SpecialRequest>>(`/special-requests/${id}`)
+      apiClient.get<ApiResponse<SpecialRequest>>(`/special-requests/${id}/`)
     );
   },
 };
 
 // Contact API
 export const contactApi = {
-  // Send contact message
+  // Send contact message - SLASH AJOUTÉ
   sendMessage: async (data: ContactMessage): Promise<void> => {
     return handleApiCall(() =>
-      apiClient.post<ApiResponse<void>>('/contact', data)
+      apiClient.post<ApiResponse<void>>('/contact/', data)
     );
   },
 };
 
 // Reviews API
 export const reviewsApi = {
-  // Get product reviews
+  // Get product reviews - SLASH AJOUTÉ
   getProductReviews: async (productId: number): Promise<Review[]> => {
     return handleApiCall(() =>
-      apiClient.get<ApiResponse<Review[]>>(`/products/${productId}/reviews`)
+      apiClient.get<ApiResponse<Review[]>>(`/products/${productId}/reviews/`)
     );
   },
 
-  // Create review
+  // Create review - SLASH AJOUTÉ
   createReview: async (data: CreateReviewData): Promise<Review> => {
     return handleApiCall(() =>
-      apiClient.post<ApiResponse<Review>>('/reviews', data)
+      apiClient.post<ApiResponse<Review>>('/reviews/', data)
     );
   },
 
-  // Delete review
+  // Delete review - SLASH AJOUTÉ
   deleteReview: async (id: number): Promise<void> => {
     return handleApiCall(() =>
-      apiClient.delete<ApiResponse<void>>(`/reviews/${id}`)
+      apiClient.delete<ApiResponse<void>>(`/reviews/${id}/`)
     );
   },
 };

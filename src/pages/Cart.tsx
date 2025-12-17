@@ -71,9 +71,9 @@ export function Cart() {
           <div className="lg:col-span-2 space-y-4">
             {cart.items.map((item) => {
               const primaryImage =
-                item.product.images.find((img) => img.is_primary) ||
-                item.product.images[0];
-              const itemTotal = item.product.price * item.quantity;
+                item.product.images?.find((img) => img.is_primary) ||
+                item.product.images?.[0];
+              const itemTotal = (item.product.price || 0) * item.quantity;
 
               return (
                 <div
@@ -102,19 +102,19 @@ export function Cart() {
                         {item.product.name}
                       </Link>
                       <p className="text-sm text-gray-600 mt-1">
-                        {item.product.category.name}
+                        {item.product.category?.name || 'Sans catégorie'}
                       </p>
 
                       {/* Price and Quantity */}
                       <div className="flex items-center justify-between mt-4">
                         <div>
                           <p className="text-xl font-bold text-orange-500">
-                            {item.product.price.toLocaleString('fr-FR')} FCFA
+                            {(item.product.price || 0).toLocaleString('fr-FR')} FCFA
                           </p>
                           {item.product.original_price &&
-                            item.product.original_price > item.product.price && (
+                            item.product.original_price > (item.product.price || 0) && (
                               <p className="text-sm text-gray-400 line-through">
-                                {item.product.original_price.toLocaleString('fr-FR')}{' '}
+                                {(item.product.original_price || 0).toLocaleString('fr-FR')}{' '}
                                 FCFA
                               </p>
                             )}
@@ -146,7 +146,7 @@ export function Cart() {
                                 )
                               }
                               className="px-3 py-2 hover:bg-gray-100 transition-colors"
-                              disabled={item.quantity >= item.product.stock}
+                              disabled={item.quantity >= (item.product.stock || 0)}
                             >
                               <Plus className="h-4 w-4" />
                             </button>
@@ -163,7 +163,7 @@ export function Cart() {
                       </div>
 
                       {/* Stock Warning */}
-                      {item.quantity >= item.product.stock && (
+                      {item.quantity >= (item.product.stock || 0) && (
                         <p className="text-sm text-orange-600 mt-2">
                           Stock maximum atteint
                         </p>
@@ -206,7 +206,7 @@ export function Cart() {
                 <div className="flex items-center justify-between text-gray-600">
                   <span>Sous-total ({cart.itemCount} articles)</span>
                   <span className="font-medium">
-                    {cart.total.toLocaleString('fr-FR')} FCFA
+                    {(cart.total || 0).toLocaleString('fr-FR')} FCFA
                   </span>
                 </div>
 
@@ -219,7 +219,7 @@ export function Cart() {
                   <div className="flex items-center justify-between text-lg font-bold text-gray-900">
                     <span>Total</span>
                     <span className="text-orange-500">
-                      {cart.total.toLocaleString('fr-FR')} FCFA
+                      {(cart.total || 0).toLocaleString('fr-FR')} FCFA
                     </span>
                   </div>
                 </div>

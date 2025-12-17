@@ -23,7 +23,13 @@ export function Home() {
         ]);
 
         setFeaturedProducts(productsData);
-        setCategories(categoriesData.slice(0, 6)); // Show only first 6 categories
+        
+        // Gérer le cas où categoriesData est un objet paginé ou un tableau
+        const categoriesArray = Array.isArray(categoriesData) 
+          ? categoriesData 
+          : (categoriesData.data || categoriesData.results || []);
+        
+        setCategories(categoriesArray.slice(0, 6)); // Show only first 6 categories
       } catch (error: any) {
         console.error('Error fetching home data:', error);
         toast.error('Erreur lors du chargement des données');
@@ -47,8 +53,8 @@ export function Home() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
               <h1 className="text-4xl lg:text-6xl font-bold leading-tight">
-                Achetez des produits américains
-                <span className="block text-yellow-300">depuis la Côte d'Ivoire</span>
+                Achetez des produits Chinois
+                <span className="block text-yellow-300">depuis le Cameroun</span>
               </h1>
               <p className="text-lg lg:text-xl text-orange-100">
                 Découvrez notre sélection de produits de qualité importés directement

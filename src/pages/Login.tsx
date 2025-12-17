@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Mail, Lock, LogIn } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -9,10 +9,10 @@ import type { LoginCredentials } from '../types';
 
 export function Login() {
   const { login } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-
-  const from = (location.state as any)?.from?.pathname || '/';
+  const [loginError, setLoginError] = React.useState<string>('');
 
   const {
     register,
@@ -20,13 +20,22 @@ export function Login() {
     formState: { errors },
   } = useForm<LoginCredentials>();
 
+  const from = (location.state as any)?.from?.pathname || '/';
+
   const onSubmit = async (data: LoginCredentials) => {
     try {
       setIsSubmitting(true);
+      setLoginError('');
+      
       await login(data);
-      // Navigation is handled in the login function
-    } catch (error) {
-      // Error is handled in the login function
+      navigate(from, { replace: true });
+    } catch (error: any) {
+      console.error('Login error:', error);
+      setLoginError(
+        error.message || 
+        error.error || 
+        'Identifiants incorrects. Veuillez réessayer.'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -50,37 +59,34 @@ export function Login() {
           </Link>
           <h2 className="text-3xl font-bold text-gray-900">Connexion</h2>
           <p className="mt-2 text-gray-600">
-            Connectez-vous à votre compte pour continuer
+            Connectez-vous pour accéder à votre compte
           </p>
         </div>
 
         {/* Form */}
         <div className="bg-white rounded-lg shadow-md p-8">
-          {from !== '/' && (
-            <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
-              <p className="text-sm text-orange-800">
-                Vous devez être connecté pour accéder à cette page.
-              </p>
+          {loginError && (
+            <div className="mb-6 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
+              <p className="text-sm">{loginError}</p>
             </div>
           )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {/* Email or Username */}
             <Input
-              label="Email"
-              type="email"
-              placeholder="votre@email.com"
+              label="Email ou Nom d'utilisateur"
+              type="text"
+              placeholder="votre@email.com ou username"
               leftIcon={<Mail className="h-5 w-5" />}
               {...register('email', {
-                required: "L'email est requis",
-                pattern: {
-                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: 'Email invalide',
-                },
+                required: "L'email ou le nom d'utilisateur est requis",
               })}
               error={errors.email?.message}
+              helperText="Vous pouvez utiliser votre email ou votre nom d'utilisateur"
               required
             />
 
+            {/* Password */}
             <Input
               label="Mot de passe"
               type="password"
@@ -88,15 +94,12 @@ export function Login() {
               leftIcon={<Lock className="h-5 w-5" />}
               {...register('password', {
                 required: 'Le mot de passe est requis',
-                minLength: {
-                  value: 6,
-                  message: 'Le mot de passe doit contenir au moins 6 caractères',
-                },
               })}
               error={errors.password?.message}
               required
             />
 
+            {/* Remember & Forgot */}
             <div className="flex items-center justify-between">
               <label className="flex items-center">
                 <input
@@ -108,13 +111,14 @@ export function Login() {
                 </span>
               </label>
               <Link
-                to="/forgot-password"
+                to="/mot-de-passe-oublie"
                 className="text-sm text-orange-500 hover:text-orange-600"
               >
                 Mot de passe oublié?
               </Link>
             </div>
 
+            {/* Submit Button */}
             <Button
               type="submit"
               size="lg"
@@ -127,11 +131,12 @@ export function Login() {
             </Button>
           </form>
 
+          {/* Register Link */}
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               Vous n'avez pas de compte?{' '}
               <Link
-                to="/inscription"
+                to="/register"
                 className="text-orange-500 hover:text-orange-600 font-medium"
               >
                 Créer un compte
@@ -140,26 +145,11 @@ export function Login() {
           </div>
         </div>
 
-        {/* Features */}
-        <div className="mt-8 grid grid-cols-3 gap-4 text-center">
-          <div>
-            <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
-              <span className="text-orange-500 text-xl">🔒</span>
-            </div>
-            <p className="text-xs text-gray-600">Sécurisé</p>
-          </div>
-          <div>
-            <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
-              <span className="text-orange-500 text-xl">⚡</span>
-            </div>
-            <p className="text-xs text-gray-600">Rapide</p>
-          </div>
-          <div>
-            <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
-              <span className="text-orange-500 text-xl">✓</span>
-            </div>
-            <p className="text-xs text-gray-600">Fiable</p>
-          </div>
+        {/* Quick Login Info */}
+        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <p className="text-sm text-blue-800 text-center">
+            💡 <strong>Astuce:</strong> Utilisez votre email ou nom d'utilisateur pour vous connecter
+          </p>
         </div>
       </div>
     </div>

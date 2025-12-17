@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { Mail, Lock, User, Phone, UserPlus } from 'lucide-react';
+import { Mail, Lock, User, Phone, UserPlus, MapPin, MessageSquare } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -23,7 +23,20 @@ export function Register() {
   const onSubmit = async (data: RegisterData) => {
     try {
       setIsSubmitting(true);
-      await registerUser(data);
+      // Transformer les données pour correspondre à l'API backend
+      const apiData = {
+        username: data.email.split('@')[0], // Générer username depuis email
+        email: data.email,
+        phone: data.phone,
+        password: data.password,
+        password2: data.password, // Confirmation du mot de passe
+        user_type: 'client',
+        whatsapp: data.whatsapp || data.phone, // Utiliser phone si whatsapp n'est pas fourni
+        address: data.address,
+        city: data.city,
+      };
+      
+      await registerUser(apiData);
       // Navigation is handled in the register function
     } catch (error) {
       // Error is handled in the register function
@@ -34,7 +47,7 @@ export function Register() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full">
+      <div className="max-w-2xl w-full">
         {/* Header */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center justify-center space-x-2 mb-6">
@@ -57,38 +70,6 @@ export function Register() {
         {/* Form */}
         <div className="bg-white rounded-lg shadow-md p-8">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Name Fields */}
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                label="Prénom"
-                placeholder="John"
-                leftIcon={<User className="h-5 w-5" />}
-                {...register('first_name', {
-                  required: 'Le prénom est requis',
-                  minLength: {
-                    value: 2,
-                    message: 'Le prénom doit contenir au moins 2 caractères',
-                  },
-                })}
-                error={errors.first_name?.message}
-                required
-              />
-
-              <Input
-                label="Nom"
-                placeholder="Doe"
-                {...register('last_name', {
-                  required: 'Le nom est requis',
-                  minLength: {
-                    value: 2,
-                    message: 'Le nom doit contenir au moins 2 caractères',
-                  },
-                })}
-                error={errors.last_name?.message}
-                required
-              />
-            </div>
-
             {/* Email */}
             <Input
               label="Email"
@@ -103,6 +84,7 @@ export function Register() {
                 },
               })}
               error={errors.email?.message}
+              helperText="Votre nom d'utilisateur sera généré automatiquement"
               required
             />
 
@@ -110,17 +92,68 @@ export function Register() {
             <Input
               label="Téléphone"
               type="tel"
-              placeholder="+225 07 00 00 00 00"
+              placeholder="+237 6XX XX XX XX"
               leftIcon={<Phone className="h-5 w-5" />}
               {...register('phone', {
+                required: 'Le numéro de téléphone est requis',
                 pattern: {
                   value: /^[+]?[\d\s-()]+$/,
                   message: 'Numéro de téléphone invalide',
                 },
               })}
               error={errors.phone?.message}
-              helperText="Optionnel - Format: +225 07 00 00 00 00"
+              helperText="Format: +237 6XX XX XX XX"
+              required
             />
+
+            {/* WhatsApp (optionnel) */}
+            <Input
+              label="WhatsApp"
+              type="tel"
+              placeholder="+237 6XX XX XX XX"
+              leftIcon={<MessageSquare className="h-5 w-5" />}
+              {...register('whatsapp', {
+                pattern: {
+                  value: /^[+]?[\d\s-()]+$/,
+                  message: 'Numéro WhatsApp invalide',
+                },
+              })}
+              error={errors.whatsapp?.message}
+              helperText="Optionnel - Si différent du téléphone"
+            />
+
+            {/* Address Fields */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                label="Adresse"
+                placeholder="Carrefour Bastos"
+                leftIcon={<MapPin className="h-5 w-5" />}
+                {...register('address', {
+                  required: "L'adresse est requise",
+                  minLength: {
+                    value: 5,
+                    message: "L'adresse doit contenir au moins 5 caractères",
+                  },
+                })}
+                error={errors.address?.message}
+                required
+              />
+
+              <Input
+                label="Ville"
+                placeholder="Yaoundé"
+                leftIcon={<MapPin className="h-5 w-5" />}
+                {...register('city', {
+                  required: 'La ville est requise',
+                  minLength: {
+                    value: 2,
+                    message: 'La ville doit contenir au moins 2 caractères',
+                  },
+                })}
+                error={errors.city?.message}
+                required
+              />
+            </div>
 
             {/* Password */}
             <Input
