@@ -1,15 +1,35 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, MapPin, MessageCircle } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
+import { citiesApi, ordersApi } from '../lib/api';
 import { Button } from '../components/ui/Button';
 import { ConfirmDialog } from '../components/ui/Modal';
+import type { City } from '../types';
+import { toast } from 'react-toastify';
 
 export function Cart() {
   const navigate = useNavigate();
   const { cart, removeFromCart, updateQuantity, clearCart } = useCart();
-  const [showClearDialog, setShowClearDialog] = React.useState(false);
-  const [itemToRemove, setItemToRemove] = React.useState<number | null>(null);
+  const [cities, setCities] = useState<City[]>([]);
+  const [selectedCity, setSelectedCity] = useState<City | null>(null);
+  const [showCitySelector, setShowCitySelector] = useState(false);
+  const [isOrdering, setIsOrdering] = useState(false);
+  const [showClearDialog, setShowClearDialog] = useState(false);
+  const [itemToRemove, setItemToRemove] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchCities = async () => {
+      try {
+        const citiesData = await citiesApi.getCities();
+        setCities(citiesData);
+      } catch (error) {
+        console.error('Error fetching cities:', error);
+      }
+    };
+
+    fetchCities();
+  }, []);
 
   const handleRemoveItem = (productId: number) => {
     removeFromCart(productId);
@@ -19,6 +39,54 @@ export function Cart() {
   const handleClearCart = () => {
     clearCart();
     setShowClearDialog(false);
+  };
+
+  const handleCheckoutClick = () => {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      toast.info('Veuillez vous connecter pour commander');
+      navigate('/login', { state: { from: '/panier' } });
+      return;
+    }
+    setShowCitySelector(true);
+  };
+
+  const handleCitySelect = async (city: City) => {
+    try {
+      setIsOrdering(true);
+      setSelectedCity(city);
+
+      // Préparer les items pour la commande
+      const items = cart.items.map(item => ({
+        product_id: item.product.id,
+        quantity: item.quantity,
+      }));
+
+      // Initier la commande du panier
+      const response = await ordersApi.initiateCartOrder({
+        items,
+        city_id: city.id,
+      });
+
+      // Afficher un message de confirmation
+      toast.success(`Redirection vers WhatsApp ${city.name}...`);
+
+      // Vider le panier
+      clearCart();
+
+      // Rediriger vers WhatsApp
+      window.open(response.whatsapp_url, '_blank');
+
+      // Rediriger vers la page des commandes après un délai
+      setTimeout(() => {
+        navigate('/commandes');
+      }, 2000);
+    } catch (error: any) {
+      console.error('Error initiating order:', error);
+      toast.error(error.message || 'Erreur lors de l\'initiation de la commande');
+    } finally {
+      setIsOrdering(false);
+    }
   };
 
   if (cart.items.length === 0) {
@@ -70,9 +138,7 @@ export function Cart() {
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
             {cart.items.map((item) => {
-              const primaryImage =
-                item.product.images?.find((img) => img.is_primary) ||
-                item.product.images?.[0];
+              const imageUrl = item.product.image_url || '/placeholder-product.jpg';
               const itemTotal = (item.product.price || 0) * item.quantity;
 
               return (
@@ -87,7 +153,7 @@ export function Cart() {
                       className="flex-shrink-0"
                     >
                       <img
-                        src={primaryImage?.url || '/placeholder-product.jpg'}
+                        src={imageUrl}
                         alt={item.product.name}
                         className="w-24 h-24 object-cover rounded-lg"
                       />
@@ -210,11 +276,6 @@ export function Cart() {
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between text-gray-600">
-                  <span>Livraison</span>
-                  <span className="font-medium">Calculé à l'étape suivante</span>
-                </div>
-
                 <div className="pt-4 border-t border-gray-200">
                   <div className="flex items-center justify-between text-lg font-bold text-gray-900">
                     <span>Total</span>
@@ -225,16 +286,60 @@ export function Cart() {
                 </div>
               </div>
 
-              <Button
-                size="lg"
-                fullWidth
-                onClick={() => navigate('/commander')}
-              >
-                Passer la commande
-              </Button>
+              {/* City Selector or Checkout Button */}
+              {showCitySelector ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                      <MapPin className="h-5 w-5 text-orange-500" />
+                      Choisissez votre ville
+                    </h3>
+                    <button
+                      onClick={() => setShowCitySelector(false)}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-600 mb-4">
+                    Sélectionnez votre ville pour finaliser via WhatsApp
+                  </p>
+                  <div className="space-y-2">
+                    {cities.map((city) => (
+                      <button
+                        key={city.id}
+                        onClick={() => handleCitySelect(city)}
+                        disabled={isOrdering && selectedCity?.id === city.id}
+                        className="w-full flex items-center justify-between p-3 border-2 border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-orange-500" />
+                          <span className="font-medium text-gray-900 text-sm">
+                            {city.name}
+                          </span>
+                        </div>
+                        {isOrdering && selectedCity?.id === city.id ? (
+                          <span className="text-xs text-orange-500">Redirection...</span>
+                        ) : (
+                          <MessageCircle className="h-4 w-4 text-gray-400" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <Button
+                  size="lg"
+                  fullWidth
+                  onClick={handleCheckoutClick}
+                  leftIcon={<MessageCircle className="h-5 w-5" />}
+                >
+                  Commander via WhatsApp
+                </Button>
+              )}
 
               <p className="text-xs text-gray-500 text-center mt-4">
-                Les frais de livraison seront calculés lors du paiement
+                Vous serez redirigé vers WhatsApp pour finaliser
               </p>
 
               {/* Trust Badges */}

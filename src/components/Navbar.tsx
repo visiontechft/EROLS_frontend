@@ -11,7 +11,7 @@ import {
   Heart,
   Settings,
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { useCart } from '../contexts/CartContext';
 import { Button } from './ui/Button';
 

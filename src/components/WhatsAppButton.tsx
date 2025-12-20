@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { MessageCircle, X } from 'lucide-react';
 
-const WHATSAPP_NUMBER = '+2250700000000'; // Replace with actual WhatsApp number
+const WHATSAPP_NUMBER = '+237695538075'; // Replace with actual WhatsApp number
 
 export function WhatsAppButton() {
   const [isOpen, setIsOpen] = useState(false);
