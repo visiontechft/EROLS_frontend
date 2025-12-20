@@ -1,3 +1,5 @@
+// src/contexts/CartContext.tsx
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from 'react-toastify';
 import type { Product, CartItem, Cart } from '../types';
@@ -22,6 +24,7 @@ interface CartProviderProps {
 
 export function CartProvider({ children }: CartProviderProps) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false); // ✅ Flag d'initialisation
 
   // Load cart from localStorage on mount
   useEffect(() => {
@@ -35,20 +38,24 @@ export function CartProvider({ children }: CartProviderProps) {
       } catch (error) {
         console.error('Error loading cart from localStorage:', error);
         localStorage.removeItem(CART_STORAGE_KEY);
+      } finally {
+        setIsInitialized(true); // ✅ Marquer comme initialisé
       }
     };
 
     loadCart();
   }, []);
 
-  // Save cart to localStorage whenever it changes
+  // Save cart to localStorage whenever it changes (après initialisation)
   useEffect(() => {
+    if (!isInitialized) return; // ✅ Ne pas sauvegarder avant l'initialisation
+
     try {
       localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
     } catch (error) {
       console.error('Error saving cart to localStorage:', error);
     }
-  }, [cartItems]);
+  }, [cartItems, isInitialized]);
 
   // Calculate cart totals
   const calculateCart = (): Cart => {

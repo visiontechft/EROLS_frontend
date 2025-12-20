@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Filter, X, ChevronDown } from 'lucide-react';
+import { Filter, X } from 'lucide-react';
 import { productsApi, categoriesApi } from '../lib/api';
 import { ProductGrid } from '../components/ProductCard';
 import { Button } from '../components/ui/Button';
@@ -14,7 +14,7 @@ export function Products() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
-  const [pagination, setPagination] = useState<PaginatedResponse<Product>['meta'] | null>(null);
+  const [pagination, setPagination] = useState<PaginatedResponse<Product> | null>(null);
 
   // Filter states
   const [filters, setFilters] = useState<ProductFilters>({
@@ -24,7 +24,7 @@ export function Products() {
     max_price: searchParams.get('max_price') ? Number(searchParams.get('max_price')) : undefined,
     sort_by: (searchParams.get('sort_by') as ProductFilters['sort_by']) || undefined,
     page: searchParams.get('page') ? Number(searchParams.get('page')) : 1,
-    per_page: 12,
+    page_size: 12,
   });
 
   // Fetch categories
@@ -32,13 +32,7 @@ export function Products() {
     const fetchCategories = async () => {
       try {
         const data = await categoriesApi.getCategories();
-        
-        // Gérer le cas où data est un objet paginé ou un tableau
-        const categoriesArray = Array.isArray(data) 
-          ? data 
-          : (data.data || data.results || []);
-        
-        setCategories(categoriesArray);
+        setCategories(data);
       } catch (error) {
         console.error('Error fetching categories:', error);
         toast.error('Erreur lors du chargement des catégories');
@@ -54,8 +48,10 @@ export function Products() {
       try {
         setIsLoading(true);
         const response = await productsApi.getProducts(filters);
-        setProducts(response.data);
-        setPagination(response.meta);
+        
+        // Extract products from paginated response
+        setProducts(response.results || []);
+        setPagination(response);
       } catch (error: any) {
         console.error('Error fetching products:', error);
         toast.error('Erreur lors du chargement des produits');
@@ -89,7 +85,7 @@ export function Products() {
   const clearFilters = () => {
     setFilters({
       page: 1,
-      per_page: 12,
+      page_size: 12,
     });
     setSearchParams({});
   };
@@ -102,6 +98,10 @@ export function Products() {
     filters.sort_by,
   ].filter(Boolean).length;
 
+  // Calculate total pages
+  const totalPages = pagination ? Math.ceil(pagination.count / (filters.page_size || 12)) : 1;
+  const currentPage = filters.page || 1;
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -112,7 +112,7 @@ export function Products() {
           </h1>
           <p className="text-gray-600">
             {pagination
-              ? `${pagination.total} produit${pagination.total > 1 ? 's' : ''} disponible${pagination.total > 1 ? 's' : ''}`
+              ? `${pagination.count} produit${pagination.count > 1 ? 's' : ''} disponible${pagination.count > 1 ? 's' : ''}`
               : 'Chargement...'}
           </p>
         </div>
@@ -161,7 +161,7 @@ export function Products() {
                   Catégories
                 </label>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
-                  <label className="flex items-center">
+                  <label className="flex items-center cursor-pointer">
                     <input
                       type="radio"
                       name="category"
@@ -173,8 +173,8 @@ export function Products() {
                       Toutes les catégories
                     </span>
                   </label>
-                  {Array.isArray(categories) && categories.map((category) => (
-                    <label key={category.id} className="flex items-center">
+                  {categories.map((category) => (
+                    <label key={category.id} className="flex items-center cursor-pointer">
                       <input
                         type="radio"
                         name="category"
@@ -264,50 +264,75 @@ export function Products() {
 
             {isLoading ? (
               <PageLoader />
+            ) : products.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-md p-12 text-center">
+                <p className="text-gray-500 text-lg">Aucun produit trouvé</p>
+                {activeFilterCount > 0 && (
+                  <Button
+                    variant="outline"
+                    onClick={clearFilters}
+                    className="mt-4"
+                  >
+                    Réinitialiser les filtres
+                  </Button>
+                )}
+              </div>
             ) : (
               <>
                 <ProductGrid products={products} />
 
                 {/* Pagination */}
-                {pagination && pagination.last_page > 1 && (
+                {totalPages > 1 && (
                   <div className="mt-8 flex items-center justify-center gap-2">
                     <Button
                       variant="outline"
-                      disabled={pagination.current_page === 1}
-                      onClick={() => updateFilter('page', pagination.current_page - 1)}
+                      disabled={currentPage === 1}
+                      onClick={() => updateFilter('page', currentPage - 1)}
                     >
                       Précédent
                     </Button>
 
                     <div className="flex items-center gap-2">
-                      {Array.from({ length: Math.min(5, pagination.last_page) }, (_, i) => {
-                        const page = i + 1;
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let page = i + 1;
+                        
+                        // Show pages around current page
+                        if (totalPages > 5) {
+                          if (currentPage <= 3) {
+                            page = i + 1;
+                          } else if (currentPage >= totalPages - 2) {
+                            page = totalPages - 4 + i;
+                          } else {
+                            page = currentPage - 2 + i;
+                          }
+                        }
+                        
                         return (
                           <button
                             key={page}
                             onClick={() => updateFilter('page', page)}
                             className={`w-10 h-10 rounded-lg font-medium transition-colors ${
-                              pagination.current_page === page
+                              currentPage === page
                                 ? 'bg-orange-500 text-white'
-                                : 'bg-white text-gray-700 hover:bg-gray-100'
+                                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
                             }`}
                           >
                             {page}
                           </button>
                         );
                       })}
-                      {pagination.last_page > 5 && (
+                      {totalPages > 5 && currentPage < totalPages - 2 && (
                         <>
                           <span className="text-gray-400">...</span>
                           <button
-                            onClick={() => updateFilter('page', pagination.last_page)}
+                            onClick={() => updateFilter('page', totalPages)}
                             className={`w-10 h-10 rounded-lg font-medium transition-colors ${
-                              pagination.current_page === pagination.last_page
+                              currentPage === totalPages
                                 ? 'bg-orange-500 text-white'
-                                : 'bg-white text-gray-700 hover:bg-gray-100'
+                                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
                             }`}
                           >
-                            {pagination.last_page}
+                            {totalPages}
                           </button>
                         </>
                       )}
@@ -315,8 +340,8 @@ export function Products() {
 
                     <Button
                       variant="outline"
-                      disabled={pagination.current_page === pagination.last_page}
-                      onClick={() => updateFilter('page', pagination.current_page + 1)}
+                      disabled={currentPage === totalPages}
+                      onClick={() => updateFilter('page', currentPage + 1)}
                     >
                       Suivant
                     </Button>

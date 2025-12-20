@@ -10,7 +10,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { ordersApi } from '../lib/api';
 import { Button } from '../components/ui/Button';
 import { Input, Textarea } from '../components/ui/Input';

@@ -1,16 +1,18 @@
-// Fichier types.ts complet avec les modifications
-
-// User types
+// ========== User Types ==========
 export interface User {
   id: number;
+  username: string;
   email: string;
   first_name: string;
   last_name: string;
-  phone?: string;
+  full_name: string;
+  phone: string;
+  whatsapp?: string;
+  user_type: 'client' | 'reseller' | 'vendor';
+  user_type_display: string;
   address?: string;
-  city?: string;
-  postal_code?: string;
-  country?: string;
+  city: string;
+  is_verified: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -25,34 +27,39 @@ export interface LoginCredentials {
   password: string;
 }
 
-// MODIFIÉ - RegisterData adapté pour l'API backend
 export interface RegisterData {
+  username?: string;
   email: string;
   phone: string;
   whatsapp?: string;
-  address: string;
+  first_name?: string;
+  last_name?: string;
+  address?: string;
   city: string;
   password: string;
   password_confirmation: string;
+  user_type?: 'client' | 'reseller' | 'vendor';
   terms?: boolean;
 }
 
-// Product types
+// ========== Product Types ==========
 export interface Product {
   id: number;
   name: string;
   slug: string;
   description: string;
   price: number;
+  category: Category;
+  image_url: string | null;
+  stock: number;
+  in_stock: boolean;
+  is_available: boolean;
+  is_featured?: boolean;
   original_price?: number;
   discount_percentage?: number;
-  category: Category;
-  images: ProductImage[];
-  stock: number;
-  is_available: boolean;
-  is_featured: boolean;
   rating?: number;
   review_count?: number;
+  images?: ProductImage[];
   specifications?: Record<string, string>;
   created_at: string;
   updated_at: string;
@@ -62,7 +69,7 @@ export interface ProductImage {
   id: number;
   url: string;
   alt_text?: string;
-  is_primary: boolean;
+  is_primary?: boolean;
   order: number;
 }
 
@@ -71,12 +78,11 @@ export interface Category {
   name: string;
   slug: string;
   description?: string;
-  image_url?: string;
-  parent_id?: number;
-  product_count?: number;
+  is_active: boolean;
+  product_count: number;
 }
 
-// Cart types
+// ========== Cart Types ==========
 export interface CartItem {
   product: Product;
   quantity: number;
@@ -88,141 +94,86 @@ export interface Cart {
   itemCount: number;
 }
 
-// Order types
+// ========== City Types (NOUVEAU) ==========
+export interface City {
+  id: number;
+  name: string;
+  whatsapp_number: string;
+  display_order: number;
+}
+
+// ========== Order Types (SIMPLIFIÉ) ==========
 export interface Order {
   id: number;
-  order_number: string;
-  user_id: number;
+  user: number;
+  product_name: string;
+  product_price: string;
+  city_name: string;
   status: OrderStatus;
-  total_amount: number;
-  subtotal: number;
-  shipping_cost: number;
-  tax_amount?: number;
-  items: OrderItem[];
-  shipping_address: ShippingAddress;
-  payment_method: PaymentMethod;
-  payment_status: PaymentStatus;
-  notes?: string;
-  tracking_number?: string;
-  estimated_delivery?: string;
+  status_display: string;
   created_at: string;
   updated_at: string;
 }
 
-export interface OrderItem {
-  id: number;
+export type OrderStatus = 'redirected' | 'completed' | 'cancelled';
+
+// ========== Initiate Order Types (NOUVEAU) ==========
+export interface InitiateOrderData {
   product_id: number;
-  product_name: string;
-  product_slug: string;
-  product_image?: string;
-  quantity: number;
-  price: number;
-  subtotal: number;
+  city_id: number;
+  quantity?: number;
 }
 
-export interface ShippingAddress {
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone: string;
-  address: string;
-  address_2?: string;
-  city: string;
-  postal_code: string;
-  country: string;
-}
-
-export type OrderStatus =
-  | 'pending'
-  | 'confirmed'
-  | 'processing'
-  | 'shipped'
-  | 'delivered'
-  | 'cancelled'
-  | 'refunded';
-
-export type PaymentMethod =
-  | 'cash_on_delivery'
-  | 'bank_transfer'
-  | 'mobile_money'
-  | 'credit_card';
-
-export type PaymentStatus =
-  | 'pending'
-  | 'paid'
-  | 'failed'
-  | 'refunded';
-
-export interface CreateOrderData {
+export interface InitiateCartOrderData {
   items: Array<{
     product_id: number;
     quantity: number;
-    price: number;
   }>;
-  shipping_address: ShippingAddress;
-  payment_method: PaymentMethod;
-  notes?: string;
+  city_id: number;
 }
 
-// Special Request types
-export interface SpecialRequest {
-  id: number;
-  user_id?: number;
-  name: string;
-  email: string;
-  phone: string;
-  product_name: string;
-  product_url?: string;
-  description: string;
-  budget?: number;
-  quantity: number;
-  delivery_deadline?: string;
-  status: SpecialRequestStatus;
-  admin_notes?: string;
-  created_at: string;
-  updated_at: string;
+export interface InitiateOrderResponse {
+  order_id: number;
+  whatsapp_url: string;
+  city: string;
+  product: string;
+  price: number;
 }
 
-export type SpecialRequestStatus =
-  | 'pending'
-  | 'reviewing'
-  | 'quoted'
-  | 'accepted'
-  | 'rejected'
-  | 'completed';
-
-export interface CreateSpecialRequestData {
-  name: string;
-  email: string;
-  phone: string;
-  product_name: string;
-  product_url?: string;
-  description: string;
-  budget?: number;
-  quantity: number;
-  delivery_deadline?: string;
+export interface InitiateCartOrderResponse {
+  order_ids: number[];
+  whatsapp_url: string;
+  city: string;
+  items_count: number;
+  total_price: number;
 }
 
-// Pagination types
+// ========== Order Stats (SIMPLIFIÉ) ==========
+export interface OrderStats {
+  total_orders: number;
+  redirected: number;
+  completed: number;
+  cancelled: number;
+}
+
+// ========== User Stats ==========
+export interface UserStats {
+  total_orders: number;
+  pending_orders: number;
+  completed_orders: number;
+  cancelled_orders: number;
+  total_spent: number;
+}
+
+// ========== Pagination Types ==========
 export interface PaginatedResponse<T> {
-  data: T[];
-  meta: {
-    current_page: number;
-    last_page: number;
-    per_page: number;
-    total: number;
-    from: number;
-    to: number;
-  };
-  links: {
-    first: string;
-    last: string;
-    prev: string | null;
-    next: string | null;
-  };
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
 }
 
-// Filter types
+// ========== Filter Types ==========
 export interface ProductFilters {
   category?: string;
   min_price?: number;
@@ -231,12 +182,12 @@ export interface ProductFilters {
   sort_by?: 'price_asc' | 'price_desc' | 'name_asc' | 'name_desc' | 'newest';
   is_featured?: boolean;
   page?: number;
-  per_page?: number;
+  page_size?: number;
 }
 
-// API Response types
+// ========== API Response Types ==========
 export interface ApiResponse<T> {
-  success: boolean;
+  success?: boolean;
   message?: string;
   data?: T;
   errors?: Record<string, string[]>;
@@ -248,30 +199,27 @@ export interface ApiError {
   status?: number;
 }
 
-// Contact types
-export interface ContactMessage {
-  name: string;
-  email: string;
-  phone?: string;
-  subject: string;
+// ========== JWT Tokens ==========
+export interface JWTTokens {
+  access: string;
+  refresh: string;
+}
+
+export interface LoginResponse {
   message: string;
+  user: User;
+  tokens: JWTTokens;
 }
 
-// Review types
-export interface Review {
-  id: number;
-  user_id: number;
-  product_id: number;
-  user_name: string;
-  rating: number;
-  comment: string;
-  is_verified: boolean;
-  created_at: string;
-  updated_at: string;
+export interface RegisterResponse {
+  message: string;
+  user: User;
+  tokens: JWTTokens;
 }
 
-export interface CreateReviewData {
-  product_id: number;
-  rating: number;
-  comment: string;
+// ========== Change Password ==========
+export interface ChangePasswordData {
+  old_password: string;
+  new_password: string;
+  new_password2: string;
 }

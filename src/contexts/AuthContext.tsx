@@ -1,10 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { authApi } from '../lib/api';
 import type { User, LoginCredentials, RegisterData, AuthUser, ApiError } from '../types';
 
-interface AuthContextType {
+export interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -15,7 +15,7 @@ interface AuthContextType {
   refreshUser: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -26,7 +26,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Load user from localStorage on mount
   useEffect(() => {
     const loadUser = async () => {
       const token = localStorage.getItem('auth_token');
@@ -37,13 +36,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
           const parsedUser = JSON.parse(storedUser);
           setUser(parsedUser);
 
-          // Optionally verify token with backend
           try {
             const currentUser = await authApi.getCurrentUser();
             setUser(currentUser);
             localStorage.setItem('auth_user', JSON.stringify(currentUser));
           } catch (error) {
-            // Token is invalid, clear storage
             console.error('Token validation failed:', error);
             localStorage.removeItem('auth_token');
             localStorage.removeItem('auth_user');
@@ -67,7 +64,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsLoading(true);
       const authUser: AuthUser = await authApi.login(credentials);
 
-      // Store token and user
       localStorage.setItem('auth_token', authUser.token);
       localStorage.setItem('auth_user', JSON.stringify(authUser.user));
       setUser(authUser.user);
@@ -88,7 +84,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsLoading(true);
       const authUser: AuthUser = await authApi.register(data);
 
-      // Store token and user
       localStorage.setItem('auth_token', authUser.token);
       localStorage.setItem('auth_user', JSON.stringify(authUser.user));
       setUser(authUser.user);
@@ -98,7 +93,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } catch (error) {
       const apiError = error as ApiError;
 
-      // Handle validation errors
       if (apiError.errors) {
         Object.entries(apiError.errors).forEach(([field, messages]) => {
           messages.forEach((message) => {
@@ -118,15 +112,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setIsLoading(true);
 
-      // Call logout endpoint
       try {
         await authApi.logout();
       } catch (error) {
-        // Continue with logout even if API call fails
         console.error('Logout API error:', error);
       }
 
-      // Clear storage and state
       localStorage.removeItem('auth_token');
       localStorage.removeItem('auth_user');
       setUser(null);
@@ -158,7 +149,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const apiError = error as ApiError;
       console.error('Error refreshing user:', apiError);
 
-      // If refresh fails due to auth error, logout
       if (apiError.status === 401) {
         localStorage.removeItem('auth_token');
         localStorage.removeItem('auth_user');
@@ -179,12 +169,4 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth(): AuthContextType {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 }

@@ -1,20 +1,25 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { User, Mail, Phone, MapPin, Lock, Save } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { authApi } from '../lib/api';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { PageLoader } from '../components/ui/LoadingSpinner';
-import type { User as UserType } from '../types';
+import type { User as UserType, ChangePasswordData } from '../types';
 import { toast } from 'react-toastify';
 
 type ProfileTab = 'info' | 'password';
 
-interface PasswordFormData {
-  current_password: string;
-  password: string;
-  password_confirmation: string;
+// Type pour la mise à jour du profil
+interface UpdateProfileData {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  whatsapp?: string;
+  address?: string;
+  city: string;
 }
 
 export function Profile() {
@@ -26,8 +31,16 @@ export function Profile() {
     register: registerProfile,
     handleSubmit: handleProfileSubmit,
     formState: { errors: profileErrors },
-  } = useForm<Partial<UserType>>({
-    defaultValues: user || undefined,
+  } = useForm<UpdateProfileData>({
+    defaultValues: {
+      first_name: user?.first_name || '',
+      last_name: user?.last_name || '',
+      email: user?.email || '',
+      phone: user?.phone || '',
+      whatsapp: user?.whatsapp || '',
+      address: user?.address || '',
+      city: user?.city || 'Douala',
+    },
   });
 
   const {
@@ -36,11 +49,11 @@ export function Profile() {
     watch,
     reset: resetPasswordForm,
     formState: { errors: passwordErrors },
-  } = useForm<PasswordFormData>();
+  } = useForm<ChangePasswordData>();
 
-  const newPassword = watch('password');
+  const newPassword = watch('new_password');
 
-  const onProfileSubmit = async (data: Partial<UserType>) => {
+  const onProfileSubmit = async (data: UpdateProfileData) => {
     try {
       setIsSubmitting(true);
       const updatedUser = await authApi.updateProfile(data);
@@ -53,7 +66,7 @@ export function Profile() {
     }
   };
 
-  const onPasswordSubmit = async (data: PasswordFormData) => {
+  const onPasswordSubmit = async (data: ChangePasswordData) => {
     try {
       setIsSubmitting(true);
       await authApi.changePassword(data);
@@ -74,6 +87,14 @@ export function Profile() {
     return null;
   }
 
+  // Obtenir les initiales pour l'avatar
+  const getInitials = () => {
+    if (user.first_name && user.last_name) {
+      return `${user.first_name[0]}${user.last_name[0]}`.toUpperCase();
+    }
+    return user.username.substring(0, 2).toUpperCase();
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -91,14 +112,18 @@ export function Profile() {
               <div className="text-center mb-6">
                 <div className="w-24 h-24 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-3">
                   <span className="text-white font-bold text-3xl">
-                    {user.first_name[0]?.toUpperCase()}
-                    {user.last_name[0]?.toUpperCase()}
+                    {getInitials()}
                   </span>
                 </div>
                 <h3 className="font-semibold text-gray-900">
-                  {user.first_name} {user.last_name}
+                  {user.full_name || user.username}
                 </h3>
                 <p className="text-sm text-gray-600">{user.email}</p>
+                {user.is_verified && (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-2">
+                    Vérifié
+                  </span>
+                )}
               </div>
 
               {/* Navigation */}
@@ -181,45 +206,52 @@ export function Profile() {
                     required
                   />
 
-                  <Input
-                    label="Téléphone"
-                    type="tel"
-                    leftIcon={<Phone className="h-5 w-5" />}
-                    {...registerProfile('phone')}
-                    error={profileErrors.phone?.message}
-                  />
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <Input
+                      label="Téléphone"
+                      type="tel"
+                      leftIcon={<Phone className="h-5 w-5" />}
+                      placeholder="+237 6XX XX XX XX"
+                      {...registerProfile('phone', {
+                        required: 'Le téléphone est requis',
+                      })}
+                      error={profileErrors.phone?.message}
+                      required
+                    />
+                    <Input
+                      label="WhatsApp (optionnel)"
+                      type="tel"
+                      leftIcon={<Phone className="h-5 w-5" />}
+                      placeholder="+237 6XX XX XX XX"
+                      {...registerProfile('whatsapp')}
+                      error={profileErrors.whatsapp?.message}
+                    />
+                  </div>
 
                   {/* Address Fields */}
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-4">
-                      Adresse de livraison par défaut
+                      Adresse de livraison
                     </h3>
 
                     <div className="space-y-4">
                       <Input
                         label="Adresse"
                         leftIcon={<MapPin className="h-5 w-5" />}
+                        placeholder="123 Rue de la Paix, Quartier..."
                         {...registerProfile('address')}
                         error={profileErrors.address?.message}
                       />
 
-                      <div className="grid md:grid-cols-3 gap-4">
-                        <Input
-                          label="Ville"
-                          {...registerProfile('city')}
-                          error={profileErrors.city?.message}
-                        />
-                        <Input
-                          label="Code postal"
-                          {...registerProfile('postal_code')}
-                          error={profileErrors.postal_code?.message}
-                        />
-                        <Input
-                          label="Pays"
-                          {...registerProfile('country')}
-                          error={profileErrors.country?.message}
-                        />
-                      </div>
+                      <Input
+                        label="Ville"
+                        placeholder="Douala, Yaoundé..."
+                        {...registerProfile('city', {
+                          required: 'La ville est requise',
+                        })}
+                        error={profileErrors.city?.message}
+                        required
+                      />
                     </div>
                   </div>
 
@@ -257,10 +289,10 @@ export function Profile() {
                     label="Mot de passe actuel"
                     type="password"
                     leftIcon={<Lock className="h-5 w-5" />}
-                    {...registerPassword('current_password', {
+                    {...registerPassword('old_password', {
                       required: 'Le mot de passe actuel est requis',
                     })}
-                    error={passwordErrors.current_password?.message}
+                    error={passwordErrors.old_password?.message}
                     required
                   />
 
@@ -268,21 +300,16 @@ export function Profile() {
                     label="Nouveau mot de passe"
                     type="password"
                     leftIcon={<Lock className="h-5 w-5" />}
-                    {...registerPassword('password', {
+                    {...registerPassword('new_password', {
                       required: 'Le nouveau mot de passe est requis',
                       minLength: {
                         value: 8,
                         message:
                           'Le mot de passe doit contenir au moins 8 caractères',
                       },
-                      pattern: {
-                        value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-                        message:
-                          'Le mot de passe doit contenir au moins une majuscule, une minuscule et un chiffre',
-                      },
                     })}
-                    error={passwordErrors.password?.message}
-                    helperText="Au moins 8 caractères avec majuscule, minuscule et chiffre"
+                    error={passwordErrors.new_password?.message}
+                    helperText="Au moins 8 caractères"
                     required
                   />
 
@@ -290,13 +317,13 @@ export function Profile() {
                     label="Confirmer le nouveau mot de passe"
                     type="password"
                     leftIcon={<Lock className="h-5 w-5" />}
-                    {...registerPassword('password_confirmation', {
+                    {...registerPassword('new_password2', {
                       required: 'Veuillez confirmer votre mot de passe',
                       validate: (value) =>
                         value === newPassword ||
                         'Les mots de passe ne correspondent pas',
                     })}
-                    error={passwordErrors.password_confirmation?.message}
+                    error={passwordErrors.new_password2?.message}
                     required
                   />
 
@@ -307,9 +334,7 @@ export function Profile() {
                     </h4>
                     <ul className="text-sm text-blue-800 space-y-1">
                       <li>• Au moins 8 caractères</li>
-                      <li>• Au moins une lettre majuscule</li>
-                      <li>• Au moins une lettre minuscule</li>
-                      <li>• Au moins un chiffre</li>
+                      <li>• Utilisez un mot de passe unique</li>
                     </ul>
                   </div>
 

@@ -1,3 +1,5 @@
+// src/components/ui/Button.tsx - VERSION STABLE
+
 import React, { ButtonHTMLAttributes, forwardRef } from 'react';
 import { Loader2 } from 'lucide-react';
 
@@ -63,10 +65,21 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled || isLoading}
         {...props}
       >
-        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        {!isLoading && leftIcon && <span className="mr-2">{leftIcon}</span>}
-        {children}
-        {!isLoading && rightIcon && <span className="ml-2">{rightIcon}</span>}
+        {/* ✅ Toujours afficher les 3 parties pour éviter les re-renders */}
+        <span className="inline-flex items-center justify-center">
+          {/* Icon gauche ou Loader */}
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+          ) : leftIcon ? (
+            <span className="mr-2">{leftIcon}</span>
+          ) : null}
+          
+          {/* Contenu principal */}
+          <span>{children}</span>
+          
+          {/* Icon droite (jamais affiché pendant loading) */}
+          {!isLoading && rightIcon && <span className="ml-2">{rightIcon}</span>}
+        </span>
       </button>
     );
   }

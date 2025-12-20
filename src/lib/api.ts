@@ -1,36 +1,38 @@
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
+import axios, { AxiosError, AxiosInstance } from 'axios';
 import type {
   User,
   AuthUser,
   LoginCredentials,
   RegisterData,
+  LoginResponse,
+  RegisterResponse,
   Product,
   Category,
+  City,
   Order,
-  CreateOrderData,
-  SpecialRequest,
-  CreateSpecialRequestData,
-  ContactMessage,
-  Review,
-  CreateReviewData,
+  InitiateOrderData,
+  InitiateOrderResponse,
+  OrderStats,
+  UserStats,
   PaginatedResponse,
   ProductFilters,
-  ApiResponse,
   ApiError,
+  ChangePasswordData,
 } from '../types';
 
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
-// Create axios instance
+// ========== Axios Instance Configuration ==========
 const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
+  timeout: 10000,
 });
 
-// Request interceptor to add auth token
+// ========== Request Interceptor ==========
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('auth_token');
@@ -44,334 +46,336 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle errors
+// ========== Response Interceptor ==========
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: AxiosError<ApiResponse<never>>) => {
+  (error: AxiosError<any>) => {
     const apiError: ApiError = {
-      message: error.response?.data?.message || error.message || 'Une erreur est survenue',
+      message: error.response?.data?.error || 
+               error.response?.data?.message || 
+               error.message || 
+               'Une erreur est survenue',
       errors: error.response?.data?.errors,
       status: error.response?.status,
     };
 
-    // Handle 401 Unauthorized - clear token and redirect to login
+    // Handle 401 Unauthorized
     if (error.response?.status === 401) {
       localStorage.removeItem('auth_token');
+      localStorage.removeItem('refresh_token');
       localStorage.removeItem('auth_user');
-      window.location.href = '/login';
+      
+      if (!window.location.pathname.includes('/login') && 
+          !window.location.pathname.includes('/register')) {
+        window.location.href = '/login';
+      }
     }
 
     return Promise.reject(apiError);
   }
 );
 
-// Helper function to handle API calls
-const handleApiCall = async <T>(
-  apiCall: () => Promise<{ data: ApiResponse<T> }>
-): Promise<T> => {
-  try {
-    const response = await apiCall();
-    if (response.data.data !== undefined) {
-      return response.data.data;
-    }
-    return response.data as unknown as T;
-  } catch (error) {
-    throw error;
-  }
-};
-
-// Authentication API
+// ========== Authentication API ==========
 export const authApi = {
-  // Login - Transforme email en username pour le backend
   login: async (credentials: LoginCredentials): Promise<AuthUser> => {
-    // Le backend attend username/password, mais le frontend utilise email/password
-    const loginData = {
-      username: credentials.email, // Utiliser l'email comme username
+    const response = await apiClient.post<LoginResponse>('/users/login/', {
+      username: credentials.email,
       password: credentials.password,
-    };
+    });
     
-    const response = await apiClient.post('/users/login/', loginData);
+    const { tokens, user } = response.data;
     
-    // Stocker le token
-    if (response.data.access) {
-      localStorage.setItem('auth_token', response.data.access);
-      localStorage.setItem('refresh_token', response.data.refresh);
-      localStorage.setItem('auth_user', JSON.stringify(response.data.user));
-    }
+    localStorage.setItem('auth_token', tokens.access);
+    localStorage.setItem('refresh_token', tokens.refresh);
+    localStorage.setItem('auth_user', JSON.stringify(user));
     
     return {
-      user: response.data.user,
-      token: response.data.access,
+      user: user,
+      token: tokens.access,
     };
   },
 
-  // Register - Transforme les données pour le backend
   register: async (data: RegisterData): Promise<AuthUser> => {
-    // Transformer les données pour correspondre à l'API backend
+    const username = data.username || data.email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '_');
+    
     const registerData = {
-      username: data.email.split('@')[0], // Générer username depuis email
+      username,
       email: data.email,
       phone: data.phone,
       password: data.password,
-      password2: data.password, // Le backend attend password2
-      user_type: 'client',
+      password2: data.password_confirmation,
+      first_name: data.first_name || '',
+      last_name: data.last_name || '',
       whatsapp: data.whatsapp || data.phone,
-      address: data.address,
-      city: data.city,
+      address: data.address || '',
+      city: data.city || 'Douala',
+      user_type: data.user_type || 'client',
     };
     
-    const response = await apiClient.post('/users/register/', registerData);
+    const response = await apiClient.post<RegisterResponse>('/users/register/', registerData);
     
-    // Le backend retourne juste l'utilisateur créé, pas de token
-    // On doit se connecter ensuite
-    if (response.data) {
-      // Auto-login après inscription
-      return await authApi.login({
-        email: data.email,
-        password: data.password,
-      });
-    }
+    const { tokens, user } = response.data;
     
-    throw new Error('Erreur lors de l\'inscription');
+    localStorage.setItem('auth_token', tokens.access);
+    localStorage.setItem('refresh_token', tokens.refresh);
+    localStorage.setItem('auth_user', JSON.stringify(user));
+    
+    return {
+      user: user,
+      token: tokens.access,
+    };
   },
 
-  // Logout - SLASH AJOUTÉ
   logout: async (): Promise<void> => {
-    return handleApiCall(() =>
-      apiClient.post<ApiResponse<void>>('/users/logout/')
-    );
+    const refreshToken = localStorage.getItem('refresh_token');
+    
+    if (refreshToken) {
+      try {
+        await apiClient.post('/users/logout/', { refresh: refreshToken });
+      } catch (error) {
+        console.error('Erreur lors de la déconnexion:', error);
+      }
+    }
+    
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('auth_user');
   },
 
-  // Get current user - SLASH AJOUTÉ
-  getCurrentUser: async (): Promise<User> => {
-    return handleApiCall(() =>
-      apiClient.get<ApiResponse<User>>('/users/me/')
-    );
+  getProfile: async (): Promise<User> => {
+    const response = await apiClient.get<User>('/users/profile/');
+    localStorage.setItem('auth_user', JSON.stringify(response.data));
+    return response.data;
   },
 
-  // Update profile - SLASH AJOUTÉ
   updateProfile: async (data: Partial<User>): Promise<User> => {
-    return handleApiCall(() =>
-      apiClient.put<ApiResponse<User>>('/users/profile/', data)
-    );
+    const response = await apiClient.patch<User>('/users/profile/', data);
+    localStorage.setItem('auth_user', JSON.stringify(response.data));
+    return response.data;
   },
 
-  // Change password - SLASH AJOUTÉ
-  changePassword: async (data: {
-    current_password: string;
-    password: string;
-    password_confirmation: string;
-  }): Promise<void> => {
-    return handleApiCall(() =>
-      apiClient.post<ApiResponse<void>>('/users/change-password/', data)
-    );
+  changePassword: async (data: ChangePasswordData): Promise<void> => {
+    await apiClient.post('/users/change-password/', data);
+  },
+
+  getUserStats: async (): Promise<UserStats> => {
+    const response = await apiClient.get<UserStats>('/users/stats/');
+    return response.data;
+  },
+
+  refreshToken: async (): Promise<string> => {
+    const refreshToken = localStorage.getItem('refresh_token');
+    
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
+    
+    const response = await apiClient.post<{ access: string }>('/users/token/refresh/', {
+      refresh: refreshToken,
+    });
+    
+    const newAccessToken = response.data.access;
+    localStorage.setItem('auth_token', newAccessToken);
+    
+    return newAccessToken;
   },
 };
 
-// Products API
+// ========== Products API ==========
 export const productsApi = {
-  // Get all products with filters - SLASH AJOUTÉ
-  getProducts: async (
-    filters?: ProductFilters
-  ): Promise<PaginatedResponse<Product>> => {
+  getProducts: async (filters?: ProductFilters): Promise<PaginatedResponse<Product>> => {
     const params = new URLSearchParams();
+    
     if (filters) {
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          params.append(key, String(value));
-        }
-      });
+      if (filters.category) params.append('category', filters.category);
+      if (filters.min_price) params.append('min_price', filters.min_price.toString());
+      if (filters.max_price) params.append('max_price', filters.max_price.toString());
+      if (filters.search) params.append('search', filters.search);
+      if (filters.sort_by) params.append('sort_by', filters.sort_by);
+      if (filters.is_featured !== undefined) params.append('is_featured', filters.is_featured.toString());
+      if (filters.page) params.append('page', filters.page.toString());
+      if (filters.page_size) params.append('page_size', filters.page_size.toString());
     }
-    const response = await apiClient.get<PaginatedResponse<Product>>(
-      '/products/',
-      { params }
-    );
+    
+    const response = await apiClient.get<PaginatedResponse<Product>>('/products/', { params });
     return response.data;
   },
 
-  // Get single product by slug - SLASH AJOUTÉ
   getProduct: async (slug: string): Promise<Product> => {
-    return handleApiCall(() =>
-      apiClient.get<ApiResponse<Product>>(`/products/${slug}/`)
-    );
+    const response = await apiClient.get<Product>(`/products/${slug}/`);
+    return response.data;
   },
 
-  // Get featured products - SLASH AJOUTÉ
-  getFeaturedProducts: async (): Promise<Product[]> => {
-    return handleApiCall(() =>
-      apiClient.get<ApiResponse<Product[]>>('/products/featured/')
-    );
-  },
-
-  // Search products - SLASH AJOUTÉ
   searchProducts: async (query: string): Promise<Product[]> => {
-    return handleApiCall(() =>
-      apiClient.get<ApiResponse<Product[]>>('/products/search/', {
-        params: { q: query },
-      })
-    );
-  },
-};
-
-// Categories API
-export const categoriesApi = {
-  // Get all categories - SLASH AJOUTÉ
-  getCategories: async (): Promise<Category[]> => {
-    try {
-      const response = await apiClient.get('/products/categories/');
-      
-      // Gérer différents formats de réponse possibles
-      const data = response.data;
-      
-      // Si c'est déjà un tableau
-      if (Array.isArray(data)) {
-        return data;
-      }
-      
-      // Si c'est un objet avec data
-      if (data.data && Array.isArray(data.data)) {
-        return data.data;
-      }
-      
-      // Si c'est un objet avec results
-      if (data.results && Array.isArray(data.results)) {
-        return data.results;
-      }
-      
-      // Fallback: retourner un tableau vide
-      console.warn('Format de catégories inattendu:', data);
-      return [];
-    } catch (error) {
-      console.error('Erreur lors de la récupération des catégories:', error);
-      throw error;
-    }
-  },
-
-  // Get single category - SLASH AJOUTÉ
-  getCategory: async (slug: string): Promise<Category> => {
-    return handleApiCall(() =>
-      apiClient.get<ApiResponse<Category>>(`/categories/${slug}/`)
-    );
-  },
-
-  // Get products by category - SLASH AJOUTÉ
-  getCategoryProducts: async (
-    slug: string,
-    filters?: ProductFilters
-  ): Promise<PaginatedResponse<Product>> => {
-    const params = new URLSearchParams();
-    if (filters) {
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          params.append(key, String(value));
-        }
-      });
-    }
-    const response = await apiClient.get<PaginatedResponse<Product>>(
-      `/categories/${slug}/products/`,
-      { params }
-    );
+    const response = await apiClient.get<Product[]>('/products/search/', {
+      params: { q: query },
+    });
     return response.data;
   },
 };
 
-// Orders API
+// ========== Categories API ==========
+export const categoriesApi = {
+  getCategories: async (): Promise<Category[]> => {
+    const response = await apiClient.get<Category[]>('/products/categories/');
+    
+    const data = response.data;
+    
+    if (Array.isArray(data)) {
+      return data;
+    }
+    
+    if ('results' in data && Array.isArray(data.results)) {
+      return data.results;
+    }
+    
+    console.warn('Format de catégories inattendu:', data);
+    return [];
+  },
+
+  getCategory: async (slug: string): Promise<Category> => {
+    const response = await apiClient.get<Category>(`/products/categories/${slug}/`);
+    return response.data;
+  },
+
+  getCategoryProducts: async (slug: string, filters?: ProductFilters): Promise<PaginatedResponse<Product>> => {
+    const params = new URLSearchParams();
+    params.append('category', slug);
+    
+    if (filters) {
+      if (filters.min_price) params.append('min_price', filters.min_price.toString());
+      if (filters.max_price) params.append('max_price', filters.max_price.toString());
+      if (filters.sort_by) params.append('sort_by', filters.sort_by);
+      if (filters.page) params.append('page', filters.page.toString());
+      if (filters.page_size) params.append('page_size', filters.page_size.toString());
+    }
+    
+    const response = await apiClient.get<PaginatedResponse<Product>>('/products/', { params });
+    return response.data;
+  },
+};
+
+// ========== Cities API (NOUVEAU) ==========
+// Dans src/lib/api.ts, remplacez la fonction getCities par :
+
+export const citiesApi = {
+  /**
+   * Obtenir toutes les villes disponibles
+   */
+  getCities: async (): Promise<City[]> => {
+    const response = await apiClient.get<City[] | { results: City[] }>('/orders/cities/');
+    
+    const data = response.data;
+    
+    // Si l'API retourne un tableau direct
+    if (Array.isArray(data)) {
+      return data;
+    }
+    
+    // Si l'API retourne un objet avec results
+    if ('results' in data && Array.isArray(data.results)) {
+      return data.results;
+    }
+    
+    // Fallback : retourner un tableau vide
+    console.warn('Format de cities inattendu:', data);
+    return [];
+  },
+};
+
+// ========== Orders API (SIMPLIFIÉ) ==========
 export const ordersApi = {
-  // Create order - SLASH AJOUTÉ
-  createOrder: async (data: CreateOrderData): Promise<Order> => {
-    return handleApiCall(() =>
-      apiClient.post<ApiResponse<Order>>('/orders/', data)
-    );
+  /**
+   * Initier une commande pour un seul produit et obtenir l'URL WhatsApp
+   */
+  initiateOrder: async (data: InitiateOrderData): Promise<InitiateOrderResponse> => {
+    const response = await apiClient.post<InitiateOrderResponse>('/orders/orders/initiate/', data);
+    return response.data;
   },
 
-  // Get user orders - SLASH AJOUTÉ
-  getOrders: async (): Promise<Order[]> => {
-    return handleApiCall(() =>
-      apiClient.get<ApiResponse<Order[]>>('/orders/')
-    );
+  /**
+   * Initier une commande pour plusieurs produits (panier) et obtenir l'URL WhatsApp
+   */
+  initiateCartOrder: async (data: InitiateCartOrderData): Promise<InitiateCartOrderResponse> => {
+    const response = await apiClient.post<InitiateCartOrderResponse>('/orders/orders/initiate_cart/', data);
+    return response.data;
   },
 
-  // Get single order - SLASH AJOUTÉ
-  getOrder: async (id: number): Promise<Order> => {
-    return handleApiCall(() =>
-      apiClient.get<ApiResponse<Order>>(`/orders/${id}/`)
-    );
+  /**
+   * Obtenir l'historique des commandes
+   */
+  getOrderHistory: async (): Promise<Order[]> => {
+    const response = await apiClient.get<Order[]>('/orders/orders/history/');
+    
+    const data = response.data;
+    if ('results' in data && Array.isArray(data.results)) {
+      return data.results;
+    }
+    
+    return Array.isArray(data) ? data : [];
   },
 
-  // Cancel order - SLASH AJOUTÉ
-  cancelOrder: async (id: number): Promise<Order> => {
-    return handleApiCall(() =>
-      apiClient.post<ApiResponse<Order>>(`/orders/${id}/cancel/`)
-    );
+  /**
+   * Obtenir les statistiques des commandes
+   */
+  getOrderStats: async (): Promise<OrderStats> => {
+    const response = await apiClient.get<OrderStats>('/orders/orders/stats/');
+    return response.data;
   },
 
-  // Get order by number - SLASH AJOUTÉ
-  getOrderByNumber: async (orderNumber: string): Promise<Order> => {
-    return handleApiCall(() =>
-      apiClient.get<ApiResponse<Order>>(`/orders/number/${orderNumber}/`)
-    );
-  },
-};
-
-// Special Requests API
-export const specialRequestsApi = {
-  // Create special request - SLASH AJOUTÉ
-  createRequest: async (
-    data: CreateSpecialRequestData
-  ): Promise<SpecialRequest> => {
-    return handleApiCall(() =>
-      apiClient.post<ApiResponse<SpecialRequest>>('/special-requests/', data)
-    );
-  },
-
-  // Get user special requests - SLASH AJOUTÉ
-  getRequests: async (): Promise<SpecialRequest[]> => {
-    return handleApiCall(() =>
-      apiClient.get<ApiResponse<SpecialRequest[]>>('/special-requests/')
-    );
-  },
-
-  // Get single special request - SLASH AJOUTÉ
-  getRequest: async (id: number): Promise<SpecialRequest> => {
-    return handleApiCall(() =>
-      apiClient.get<ApiResponse<SpecialRequest>>(`/special-requests/${id}/`)
-    );
+  /**
+   * Mettre à jour le statut d'une commande
+   */
+  updateOrderStatus: async (id: number, status: 'completed' | 'cancelled'): Promise<Order> => {
+    const response = await apiClient.patch<Order>(`/orders/orders/${id}/update_status/`, { status });
+    return response.data;
   },
 };
 
-// Contact API
-export const contactApi = {
-  // Send contact message - SLASH AJOUTÉ
-  sendMessage: async (data: ContactMessage): Promise<void> => {
-    return handleApiCall(() =>
-      apiClient.post<ApiResponse<void>>('/contact/', data)
-    );
-  },
+// ========== Helper Functions ==========
+
+export const isAuthenticated = (): boolean => {
+  const token = localStorage.getItem('auth_token');
+  return !!token;
 };
 
-// Reviews API
-export const reviewsApi = {
-  // Get product reviews - SLASH AJOUTÉ
-  getProductReviews: async (productId: number): Promise<Review[]> => {
-    return handleApiCall(() =>
-      apiClient.get<ApiResponse<Review[]>>(`/products/${productId}/reviews/`)
-    );
-  },
-
-  // Create review - SLASH AJOUTÉ
-  createReview: async (data: CreateReviewData): Promise<Review> => {
-    return handleApiCall(() =>
-      apiClient.post<ApiResponse<Review>>('/reviews/', data)
-    );
-  },
-
-  // Delete review - SLASH AJOUTÉ
-  deleteReview: async (id: number): Promise<void> => {
-    return handleApiCall(() =>
-      apiClient.delete<ApiResponse<void>>(`/reviews/${id}/`)
-    );
-  },
+export const getStoredUser = (): User | null => {
+  const userStr = localStorage.getItem('auth_user');
+  if (userStr) {
+    try {
+      return JSON.parse(userStr);
+    } catch {
+      return null;
+    }
+  }
+  return null;
 };
 
-// Export the configured axios instance for custom calls
+export const formatPrice = (price: string | number): string => {
+  const numPrice = typeof price === 'string' ? parseFloat(price) : price;
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'XAF',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(numPrice);
+};
+
+export const formatDate = (dateStr: string): string => {
+  return new Intl.DateTimeFormat('fr-FR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(new Date(dateStr));
+};
+
+export const getOrderStatusLabel = (status: string): string => {
+  const labels: Record<string, string> = {
+    redirected: 'Redirigé vers WhatsApp',
+    completed: 'Complétée',
+    cancelled: 'Annulée',
+  };
+  return labels[status] || status;
+};
+
 export default apiClient;

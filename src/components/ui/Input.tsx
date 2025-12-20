@@ -1,3 +1,5 @@
+// src/components/ui/Input.tsx
+
 import React, { InputHTMLAttributes, forwardRef } from 'react';
 import { AlertCircle } from 'lucide-react';
 
@@ -21,11 +23,35 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       className = '',
       containerClassName = '',
       id,
+      type = 'text',
+      autoComplete,
       ...props
     },
     ref
   ) => {
     const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
+
+    // ✅ Ajouter autocomplete automatiquement selon le type
+    const getAutoComplete = (): string | undefined => {
+      if (autoComplete) return autoComplete;
+      
+      switch (type) {
+        case 'email':
+          return 'email';
+        case 'password':
+          return 'current-password';
+        case 'tel':
+          return 'tel';
+        case 'text':
+          // Si le label contient certains mots-clés
+          if (label?.toLowerCase().includes('nom')) return 'name';
+          if (label?.toLowerCase().includes('prénom')) return 'given-name';
+          if (label?.toLowerCase().includes('username')) return 'username';
+          return undefined;
+        default:
+          return undefined;
+      }
+    };
 
     const baseClasses =
       'w-full px-4 py-2 border rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed';
@@ -59,7 +85,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             </div>
           )}
 
-          <input ref={ref} id={inputId} className={inputClasses} {...props} />
+          <input 
+            ref={ref} 
+            id={inputId} 
+            type={type}
+            autoComplete={getAutoComplete()} // ✅ Autocomplete automatique
+            className={inputClasses} 
+            {...props} 
+          />
 
           {rightIcon && !error && (
             <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">

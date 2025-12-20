@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
-  ShoppingCart,
-  Heart,
+  MapPin,
   Share2,
   Star,
   ChevronLeft,
@@ -10,55 +9,98 @@ import {
   Truck,
   Shield,
   Package,
+  MessageCircle,
+  ShoppingCart,
 } from 'lucide-react';
-import { productsApi } from '../lib/api';
+import { productsApi, citiesApi, ordersApi } from '../lib/api';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '../components/ui/Button';
 import { Badge, StockBadge } from '../components/ui/Badge';
 import { PageLoader } from '../components/ui/LoadingSpinner';
-import type { Product } from '../types';
+import type { Product, City } from '../types';
 import { toast } from 'react-toastify';
 
 export function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { addToCart, isInCart, getItemQuantity } = useCart();
+  const { addToCart } = useCart();
 
   const [product, setProduct] = useState<Product | null>(null);
+  const [cities, setCities] = useState<City[]>([]);
+  const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isOrdering, setIsOrdering] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [showCitySelector, setShowCitySelector] = useState(false);
   const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
-    const fetchProduct = async () => {
+    const fetchData = async () => {
       if (!slug) return;
 
       try {
         setIsLoading(true);
-        const data = await productsApi.getProduct(slug);
-        setProduct(data);
+        const [productData, citiesData] = await Promise.all([
+          productsApi.getProduct(slug),
+          citiesApi.getCities(),
+        ]);
+        setProduct(productData);
+        setCities(citiesData);
       } catch (error: any) {
-        console.error('Error fetching product:', error);
-        toast.error('Erreur lors du chargement du produit');
+        console.error('Error fetching data:', error);
+        toast.error('Erreur lors du chargement des données');
         navigate('/produits');
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchProduct();
+    fetchData();
   }, [slug, navigate]);
 
   const handleAddToCart = () => {
     if (product) {
       addToCart(product, quantity);
+      toast.success('Produit ajouté au panier');
     }
   };
 
-  const handleBuyNow = () => {
-    if (product) {
-      addToCart(product, quantity);
-      navigate('/panier');
+  const handleOrderClick = () => {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      toast.info('Veuillez vous connecter pour commander');
+      navigate('/login', { state: { from: `/produits/${slug}` } });
+      return;
+    }
+    setShowCitySelector(true);
+  };
+
+  const handleCitySelect = async (city: City) => {
+    if (!product) return;
+
+    try {
+      setIsOrdering(true);
+      setSelectedCity(city);
+
+      // Initier la commande pour ce produit uniquement
+      const response = await ordersApi.initiateOrder({
+        product_id: product.id,
+        city_id: city.id,
+        quantity: quantity,
+      });
+
+      toast.success(`Redirection vers WhatsApp ${city.name}...`);
+      window.open(response.whatsapp_url, '_blank');
+
+      setTimeout(() => {
+        setShowCitySelector(false);
+        setSelectedCity(null);
+      }, 2000);
+    } catch (error: any) {
+      console.error('Error initiating order:', error);
+      toast.error(error.message || 'Erreur lors de l\'initiation de la commande');
+    } finally {
+      setIsOrdering(false);
     }
   };
 
@@ -91,20 +133,15 @@ export function ProductDetail() {
   const images = product.images?.sort((a, b) => a.order - b.order) || [];
   const currentImage = images[selectedImageIndex] || images[0];
   const hasDiscount = product.original_price && product.original_price > (product.price || 0);
-  const inCartQuantity = getItemQuantity(product.id);
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <nav className="flex items-center space-x-2 text-sm text-gray-600 mb-8">
-          <Link to="/" className="hover:text-orange-500">
-            Accueil
-          </Link>
+          <Link to="/" className="hover:text-orange-500">Accueil</Link>
           <span>/</span>
-          <Link to="/produits" className="hover:text-orange-500">
-            Produits
-          </Link>
+          <Link to="/produits" className="hover:text-orange-500">Produits</Link>
           <span>/</span>
           <Link
             to={`/produits?category=${product.category?.slug}`}
@@ -119,26 +156,21 @@ export function ProductDetail() {
         <div className="grid lg:grid-cols-2 gap-12">
           {/* Images Section */}
           <div className="space-y-4">
-            {/* Main Image */}
             <div className="relative aspect-square bg-white rounded-lg overflow-hidden shadow-md">
               <img
-                src={currentImage?.url || '/placeholder-product.jpg'}
+                src={currentImage?.url || product.image_url || '/placeholder-product.jpg'}
                 alt={currentImage?.alt_text || product.name}
                 className="w-full h-full object-contain"
               />
 
-              {/* Badges */}
               <div className="absolute top-4 left-4 flex flex-col gap-2">
-                {!product.is_available && (
-                  <Badge variant="danger">Indisponible</Badge>
-                )}
+                {!product.is_available && <Badge variant="danger">Indisponible</Badge>}
                 {product.is_featured && <Badge variant="primary">Vedette</Badge>}
                 {hasDiscount && (
                   <Badge variant="success">-{product.discount_percentage || 0}%</Badge>
                 )}
               </div>
 
-              {/* Navigation Arrows */}
               {images.length > 1 && (
                 <>
                   <button
@@ -165,7 +197,6 @@ export function ProductDetail() {
               )}
             </div>
 
-            {/* Thumbnails */}
             {images.length > 1 && (
               <div className="grid grid-cols-4 gap-4">
                 {images.map((image, index) => (
@@ -191,7 +222,6 @@ export function ProductDetail() {
 
           {/* Product Info Section */}
           <div className="space-y-6">
-            {/* Title and Category */}
             <div>
               <Link
                 to={`/produits?category=${product.category?.slug}`}
@@ -199,12 +229,9 @@ export function ProductDetail() {
               >
                 {product.category?.name || 'Catégorie'}
               </Link>
-              <h1 className="text-3xl font-bold text-gray-900 mt-2">
-                {product.name}
-              </h1>
+              <h1 className="text-3xl font-bold text-gray-900 mt-2">{product.name}</h1>
             </div>
 
-            {/* Rating */}
             {product.rating && (
               <div className="flex items-center gap-2">
                 <div className="flex items-center">
@@ -230,7 +257,6 @@ export function ProductDetail() {
               </div>
             )}
 
-            {/* Price */}
             <div className="flex items-baseline gap-3">
               <span className="text-4xl font-bold text-orange-500">
                 {(product.price || 0).toLocaleString('fr-FR')} FCFA
@@ -242,26 +268,18 @@ export function ProductDetail() {
               )}
             </div>
 
-            {/* Stock Status */}
             <StockBadge stock={product.stock || 0} />
 
-            {/* Description */}
             <div className="prose prose-sm max-w-none">
               <p className="text-gray-600">{product.description}</p>
             </div>
 
-            {/* Specifications */}
             {product.specifications && Object.keys(product.specifications).length > 0 && (
               <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 mb-3">
-                  Caractéristiques
-                </h3>
+                <h3 className="font-semibold text-gray-900 mb-3">Caractéristiques</h3>
                 <dl className="space-y-2">
                   {Object.entries(product.specifications).map(([key, value]) => (
-                    <div
-                      key={key}
-                      className="flex items-center justify-between text-sm"
-                    >
+                    <div key={key} className="flex items-center justify-between text-sm">
                       <dt className="text-gray-600">{key}:</dt>
                       <dd className="text-gray-900 font-medium">{value}</dd>
                     </div>
@@ -270,72 +288,79 @@ export function ProductDetail() {
               </div>
             )}
 
-            {/* Quantity Selector */}
-            {product.is_available && (product.stock || 0) > 0 && (
-              <div className="flex items-center gap-4">
-                <label className="text-sm font-medium text-gray-700">
-                  Quantité:
-                </label>
-                <div className="flex items-center border border-gray-300 rounded-lg">
+            {/* Action Buttons */}
+            {showCitySelector ? (
+              <div className="bg-white border-2 border-orange-500 rounded-lg p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <MapPin className="h-5 w-5 text-orange-500" />
+                    Choisissez votre ville
+                  </h3>
                   <button
-                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    className="px-4 py-2 hover:bg-gray-100 transition-colors"
+                    onClick={() => setShowCitySelector(false)}
+                    className="text-gray-400 hover:text-gray-600"
                   >
-                    -
-                  </button>
-                  <span className="px-4 py-2 font-medium min-w-[3rem] text-center">
-                    {quantity}
-                  </span>
-                  <button
-                    onClick={() =>
-                      setQuantity((q) => Math.min(product.stock || 0, q + 1))
-                    }
-                    className="px-4 py-2 hover:bg-gray-100 transition-colors"
-                  >
-                    +
+                    ✕
                   </button>
                 </div>
-                {inCartQuantity > 0 && (
-                  <span className="text-sm text-gray-600">
-                    ({inCartQuantity} déjà dans le panier)
-                  </span>
-                )}
+                <p className="text-sm text-gray-600">
+                  Sélectionnez votre ville pour être redirigé vers WhatsApp et finaliser votre commande
+                </p>
+                <div className="grid gap-3">
+                  {cities.map((city) => (
+                    <button
+                      key={city.id}
+                      onClick={() => handleCitySelect(city)}
+                      disabled={isOrdering && selectedCity?.id === city.id}
+                      className="flex items-center justify-between p-4 border-2 border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <div className="flex items-center gap-3">
+                        <MapPin className="h-5 w-5 text-orange-500" />
+                        <span className="font-medium text-gray-900">{city.name}</span>
+                      </div>
+                      {isOrdering && selectedCity?.id === city.id ? (
+                        <span className="text-sm text-orange-500">Redirection...</span>
+                      ) : (
+                        <MessageCircle className="h-5 w-5 text-gray-400" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex gap-3">
+                  <Button
+                    size="lg"
+                    fullWidth
+                    onClick={handleAddToCart}
+                    disabled={!product.is_available || (product.stock || 0) === 0}
+                    leftIcon={<ShoppingCart className="h-5 w-5" />}
+                  >
+                    Ajouter au panier
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    onClick={handleShare}
+                    className="px-6"
+                  >
+                    <Share2 className="h-5 w-5" />
+                  </Button>
+                </div>
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  fullWidth
+                  onClick={handleOrderClick}
+                  disabled={!product.is_available || (product.stock || 0) === 0}
+                  leftIcon={<MessageCircle className="h-5 w-5" />}
+                >
+                  Acheter maintenant via WhatsApp
+                </Button>
               </div>
             )}
 
-            {/* Action Buttons */}
-            <div className="space-y-3">
-              <div className="flex gap-3">
-                <Button
-                  size="lg"
-                  fullWidth
-                  onClick={handleAddToCart}
-                  disabled={!product.is_available || (product.stock || 0) === 0}
-                  leftIcon={<ShoppingCart className="h-5 w-5" />}
-                >
-                  Ajouter au panier
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  onClick={handleShare}
-                  className="px-6"
-                >
-                  <Share2 className="h-5 w-5" />
-                </Button>
-              </div>
-              <Button
-                size="lg"
-                variant="secondary"
-                fullWidth
-                onClick={handleBuyNow}
-                disabled={!product.is_available || (product.stock || 0) === 0}
-              >
-                Acheter maintenant
-              </Button>
-            </div>
-
-            {/* Features */}
             <div className="grid grid-cols-1 gap-4 pt-6 border-t">
               {[
                 {
@@ -359,9 +384,7 @@ export function ProductDetail() {
                     <feature.icon className="h-5 w-5 text-orange-500" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      {feature.title}
-                    </p>
+                    <p className="text-sm font-medium text-gray-900">{feature.title}</p>
                     <p className="text-xs text-gray-600">{feature.description}</p>
                   </div>
                 </div>

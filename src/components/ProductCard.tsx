@@ -29,7 +29,7 @@ export function ProductCard({
     onQuickView?.(product);
   };
 
-  const primaryImage = product.images?.find((img) => img.is_primary) || product.images?.[0];
+  const imageUrl = product.image_url || '/placeholder-product.jpg';
   const hasDiscount = product.original_price && product.original_price > product.price;
 
   return (
@@ -40,10 +40,13 @@ export function ProductCard({
       {/* Image Container */}
       <div className="relative aspect-square overflow-hidden bg-gray-100">
         <img
-          src={primaryImage?.url || '/placeholder-product.jpg'}
-          alt={primaryImage?.alt_text || product.name}
+          src={imageUrl}
+          alt={product.name}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
           loading="lazy"
+          onError={(e) => {
+            e.currentTarget.src = '/placeholder-product.jpg';
+          }}
         />
 
         {/* Badges */}
@@ -168,7 +171,6 @@ export function ProductGrid({
     );
   }
 
-  // Vérification de sécurité pour products
   if (!products || !Array.isArray(products)) {
     return (
       <div className="text-center py-12">

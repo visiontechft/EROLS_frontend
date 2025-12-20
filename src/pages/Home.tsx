@@ -9,7 +9,7 @@ import type { Product, Category } from '../types';
 import { toast } from 'react-toastify';
 
 export function Home() {
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -17,19 +17,19 @@ export function Home() {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const [productsData, categoriesData] = await Promise.all([
-          productsApi.getFeaturedProducts(),
+        
+        // Fetch products and categories
+        const [productsResponse, categoriesData] = await Promise.all([
+          productsApi.getProducts({ page_size: 8 }), // Get first 8 products
           categoriesApi.getCategories(),
         ]);
 
-        setFeaturedProducts(productsData);
+        // Extract products from paginated response
+        const productsList = productsResponse.results || [];
+        setProducts(productsList);
         
-        // Gérer le cas où categoriesData est un objet paginé ou un tableau
-        const categoriesArray = Array.isArray(categoriesData) 
-          ? categoriesData 
-          : (categoriesData.data || categoriesData.results || []);
-        
-        setCategories(categoriesArray.slice(0, 6)); // Show only first 6 categories
+        // Categories are already an array
+        setCategories(categoriesData.slice(0, 6)); // Show only first 6 categories
       } catch (error: any) {
         console.error('Error fetching home data:', error);
         toast.error('Erreur lors du chargement des données');
@@ -58,7 +58,7 @@ export function Home() {
               </h1>
               <p className="text-lg lg:text-xl text-orange-100">
                 Découvrez notre sélection de produits de qualité importés directement
-                des États-Unis. Commandez en toute simplicité et recevez rapidement.
+                de Chine. Commandez en toute simplicité et recevez rapidement.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button
@@ -72,10 +72,10 @@ export function Home() {
                 <Button
                   size="lg"
                   variant="outline"
-                  onClick={() => window.location.href = '/demande-speciale'}
+                  onClick={() => window.location.href = '/contact'}
                   className="bg-white/10 border-white text-white hover:bg-white hover:text-orange-600"
                 >
-                  Demande spéciale
+                  Nous contacter
                 </Button>
               </div>
             </div>
@@ -167,16 +167,8 @@ export function Home() {
                   className="group bg-white rounded-lg p-6 text-center hover:shadow-lg transition-all duration-300"
                 >
                   <div className="w-16 h-16 mx-auto mb-3 bg-orange-100 rounded-full flex items-center justify-center group-hover:bg-orange-500 transition-colors">
-                    <span className="text-2xl">
-                      {category.image_url ? (
-                        <img
-                          src={category.image_url}
-                          alt={category.name}
-                          className="w-10 h-10 object-contain"
-                        />
-                      ) : (
-                        '📦'
-                      )}
+                    <span className="text-2xl group-hover:scale-110 transition-transform">
+                      📦
                     </span>
                   </div>
                   <h3 className="font-semibold text-gray-900 group-hover:text-orange-500 transition-colors">
@@ -194,17 +186,17 @@ export function Home() {
         </section>
       )}
 
-      {/* Featured Products Section */}
-      {featuredProducts.length > 0 && (
+      {/* Products Section */}
+      {products.length > 0 && (
         <section className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h2 className="text-3xl font-bold text-gray-900">
-                  Produits en vedette
+                  Nos produits
                 </h2>
                 <p className="text-gray-600 mt-2">
-                  Découvrez notre sélection de produits populaires
+                  Découvrez notre sélection de produits
                 </p>
               </div>
               <Link
@@ -216,7 +208,7 @@ export function Home() {
               </Link>
             </div>
 
-            <ProductGrid products={featuredProducts.slice(0, 8)} />
+            <ProductGrid products={products} />
 
             <div className="text-center mt-8">
               <Button
@@ -238,16 +230,16 @@ export function Home() {
             Vous ne trouvez pas ce que vous cherchez?
           </h2>
           <p className="text-lg text-orange-100 mb-8 max-w-2xl mx-auto">
-            Faites une demande spéciale et nous ferons de notre mieux pour vous
-            trouver le produit parfait depuis les États-Unis.
+            Contactez-nous et nous ferons de notre mieux pour vous
+            trouver le produit parfait.
           </p>
           <Button
             size="lg"
             variant="secondary"
-            onClick={() => window.location.href = '/demande-speciale'}
+            onClick={() => window.location.href = '/contact'}
             className="bg-white text-orange-600 hover:bg-gray-100"
           >
-            Faire une demande spéciale
+            Nous contacter
           </Button>
         </div>
       </section>
@@ -260,7 +252,7 @@ export function Home() {
               Comment ça marche?
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Commander vos produits américains est simple et rapide
+              Commander vos produits est simple et rapide
             </p>
           </div>
 
@@ -269,21 +261,21 @@ export function Home() {
               {
                 step: '1',
                 title: 'Parcourez & Choisissez',
-                description: 'Explorez notre catalogue ou faites une demande spéciale',
+                description: 'Explorez notre catalogue et sélectionnez vos produits',
               },
               {
                 step: '2',
-                title: 'Commandez & Payez',
-                description: 'Passez votre commande et effectuez le paiement en toute sécurité',
+                title: 'Commandez',
+                description: 'Passez votre commande et choisissez votre mode de paiement',
               },
               {
                 step: '3',
                 title: 'Recevez',
-                description: 'Recevez vos produits directement à votre porte',
+                description: 'Recevez vos produits directement chez vous',
               },
             ].map((item, index) => (
               <div key={index} className="relative">
-                <div className="bg-white rounded-lg p-6 text-center">
+                <div className="bg-white rounded-lg p-6 text-center shadow-md">
                   <div className="w-16 h-16 bg-orange-500 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
                     {item.step}
                   </div>
@@ -299,14 +291,6 @@ export function Home() {
                 )}
               </div>
             ))}
-          </div>
-
-          <div className="text-center mt-12">
-            <Link to="/comment-ca-marche">
-              <Button variant="outline" size="lg">
-                En savoir plus
-              </Button>
-            </Link>
           </div>
         </div>
       </section>
