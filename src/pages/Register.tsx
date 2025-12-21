@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import type { RegisterData } from '../types';
+import { SocialLoginButtons } from '../components/auth/SocialLoginButtons';
 
 export function Register() {
   const { register: registerUser } = useAuth();
@@ -69,6 +70,10 @@ export function Register() {
 
         {/* Form */}
         <div className="bg-white rounded-lg shadow-md p-8">
+          <SocialLoginButtons 
+            onError={(error) => console.error(error)}
+            onSuccess={() => {/* Navigation gérée dans le composant */}}
+          />
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Email */}
             <Input

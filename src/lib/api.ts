@@ -126,6 +126,46 @@ export const authApi = {
     };
   },
 
+  /**
+   * Authentification via Google OAuth
+   */
+  googleLogin: async (idToken: string): Promise<AuthUser> => {
+    const response = await apiClient.post<LoginResponse>('/users/auth/google/', {
+      id_token: idToken,
+    });
+    
+    const { tokens, user } = response.data;
+    
+    localStorage.setItem('auth_token', tokens.access);
+    localStorage.setItem('refresh_token', tokens.refresh);
+    localStorage.setItem('auth_user', JSON.stringify(user));
+    
+    return {
+      user: user,
+      token: tokens.access,
+    };
+  },
+
+  /**
+   * Authentification via Facebook OAuth
+   */
+  facebookLogin: async (accessToken: string): Promise<AuthUser> => {
+    const response = await apiClient.post<LoginResponse>('/users/auth/facebook/', {
+      access_token: accessToken,
+    });
+    
+    const { tokens, user } = response.data;
+    
+    localStorage.setItem('auth_token', tokens.access);
+    localStorage.setItem('refresh_token', tokens.refresh);
+    localStorage.setItem('auth_user', JSON.stringify(user));
+    
+    return {
+      user: user,
+      token: tokens.access,
+    };
+  },
+
   logout: async (): Promise<void> => {
     const refreshToken = localStorage.getItem('refresh_token');
     
@@ -255,55 +295,38 @@ export const categoriesApi = {
   },
 };
 
-// ========== Cities API (NOUVEAU) ==========
-// Dans src/lib/api.ts, remplacez la fonction getCities par :
-
+// ========== Cities API ==========
 export const citiesApi = {
-  /**
-   * Obtenir toutes les villes disponibles
-   */
   getCities: async (): Promise<City[]> => {
     const response = await apiClient.get<City[] | { results: City[] }>('/orders/cities/');
     
     const data = response.data;
     
-    // Si l'API retourne un tableau direct
     if (Array.isArray(data)) {
       return data;
     }
     
-    // Si l'API retourne un objet avec results
     if ('results' in data && Array.isArray(data.results)) {
       return data.results;
     }
     
-    // Fallback : retourner un tableau vide
     console.warn('Format de cities inattendu:', data);
     return [];
   },
 };
 
-// ========== Orders API (SIMPLIFIÉ) ==========
+// ========== Orders API ==========
 export const ordersApi = {
-  /**
-   * Initier une commande pour un seul produit et obtenir l'URL WhatsApp
-   */
   initiateOrder: async (data: InitiateOrderData): Promise<InitiateOrderResponse> => {
     const response = await apiClient.post<InitiateOrderResponse>('/orders/orders/initiate/', data);
     return response.data;
   },
 
-  /**
-   * Initier une commande pour plusieurs produits (panier) et obtenir l'URL WhatsApp
-   */
-  initiateCartOrder: async (data: InitiateCartOrderData): Promise<InitiateCartOrderResponse> => {
-    const response = await apiClient.post<InitiateCartOrderResponse>('/orders/orders/initiate_cart/', data);
+  initiateCartOrder: async (data: any): Promise<any> => {
+    const response = await apiClient.post<any>('/orders/orders/initiate_cart/', data);
     return response.data;
   },
 
-  /**
-   * Obtenir l'historique des commandes
-   */
   getOrderHistory: async (): Promise<Order[]> => {
     const response = await apiClient.get<Order[]>('/orders/orders/history/');
     
@@ -315,17 +338,11 @@ export const ordersApi = {
     return Array.isArray(data) ? data : [];
   },
 
-  /**
-   * Obtenir les statistiques des commandes
-   */
   getOrderStats: async (): Promise<OrderStats> => {
     const response = await apiClient.get<OrderStats>('/orders/orders/stats/');
     return response.data;
   },
 
-  /**
-   * Mettre à jour le statut d'une commande
-   */
   updateOrderStatus: async (id: number, status: 'completed' | 'cancelled'): Promise<Order> => {
     const response = await apiClient.patch<Order>(`/orders/orders/${id}/update_status/`, { status });
     return response.data;
@@ -333,7 +350,6 @@ export const ordersApi = {
 };
 
 // ========== Helper Functions ==========
-
 export const isAuthenticated = (): boolean => {
   const token = localStorage.getItem('auth_token');
   return !!token;

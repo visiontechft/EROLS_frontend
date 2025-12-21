@@ -10,6 +10,8 @@ export interface AuthContextType {
   isLoading: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
+  googleLogin: (idToken: string) => Promise<void>;
+  facebookLogin: (accessToken: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (userData: Partial<User>) => void;
   refreshUser: () => Promise<void>;
@@ -37,12 +39,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setUser(parsedUser);
 
           try {
-            const currentUser = await authApi.getCurrentUser();
+            const currentUser = await authApi.getProfile();
             setUser(currentUser);
             localStorage.setItem('auth_user', JSON.stringify(currentUser));
           } catch (error) {
             console.error('Token validation failed:', error);
             localStorage.removeItem('auth_token');
+            localStorage.removeItem('refresh_token');
             localStorage.removeItem('auth_user');
             setUser(null);
           }
@@ -50,6 +53,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           console.error('Error parsing stored user:', error);
           localStorage.removeItem('auth_user');
           localStorage.removeItem('auth_token');
+          localStorage.removeItem('refresh_token');
         }
       }
 
@@ -64,12 +68,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsLoading(true);
       const authUser: AuthUser = await authApi.login(credentials);
 
-      localStorage.setItem('auth_token', authUser.token);
-      localStorage.setItem('auth_user', JSON.stringify(authUser.user));
       setUser(authUser.user);
 
       toast.success('Connexion réussie!');
-      navigate('/');
     } catch (error) {
       const apiError = error as ApiError;
       toast.error(apiError.message || 'Échec de la connexion');
@@ -84,12 +85,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsLoading(true);
       const authUser: AuthUser = await authApi.register(data);
 
-      localStorage.setItem('auth_token', authUser.token);
-      localStorage.setItem('auth_user', JSON.stringify(authUser.user));
       setUser(authUser.user);
 
       toast.success('Inscription réussie! Bienvenue sur EROLS EasyBuy!');
-      navigate('/');
     } catch (error) {
       const apiError = error as ApiError;
 
@@ -108,6 +106,42 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const googleLogin = async (idToken: string) => {
+    try {
+      setIsLoading(true);
+      const authUser: AuthUser = await authApi.googleLogin(idToken);
+
+      setUser(authUser.user);
+
+      toast.success('Connexion Google réussie!');
+      navigate('/');
+    } catch (error) {
+      const apiError = error as ApiError;
+      toast.error(apiError.message || 'Échec de la connexion Google');
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const facebookLogin = async (accessToken: string) => {
+    try {
+      setIsLoading(true);
+      const authUser: AuthUser = await authApi.facebookLogin(accessToken);
+
+      setUser(authUser.user);
+
+      toast.success('Connexion Facebook réussie!');
+      navigate('/');
+    } catch (error) {
+      const apiError = error as ApiError;
+      toast.error(apiError.message || 'Échec de la connexion Facebook');
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const logout = async () => {
     try {
       setIsLoading(true);
@@ -119,6 +153,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       localStorage.removeItem('auth_token');
+      localStorage.removeItem('refresh_token');
       localStorage.removeItem('auth_user');
       setUser(null);
 
@@ -142,7 +177,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const refreshUser = async () => {
     try {
-      const currentUser = await authApi.getCurrentUser();
+      const currentUser = await authApi.getProfile();
       setUser(currentUser);
       localStorage.setItem('auth_user', JSON.stringify(currentUser));
     } catch (error) {
@@ -151,6 +186,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       if (apiError.status === 401) {
         localStorage.removeItem('auth_token');
+        localStorage.removeItem('refresh_token');
         localStorage.removeItem('auth_user');
         setUser(null);
       }
@@ -163,6 +199,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     isLoading,
     login,
     register,
+    googleLogin,
+    facebookLogin,
     logout,
     updateUser,
     refreshUser,
