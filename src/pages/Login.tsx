@@ -5,6 +5,7 @@ import { Mail, Lock, LogIn } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import { SocialLoginButtons } from '../components/auth/SocialLoginButtons';
 import type { LoginCredentials } from '../types';
 
 export function Login() {
@@ -71,7 +72,13 @@ export function Login() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {/* Social Login Buttons */}
+          <SocialLoginButtons 
+            onError={setLoginError}
+            onSuccess={() => navigate(from, { replace: true })}
+          />
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 mt-6">
             {/* Email or Username */}
             <Input
               label="Email ou Nom d'utilisateur"

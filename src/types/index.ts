@@ -217,6 +217,21 @@ export interface RegisterResponse {
   tokens: JWTTokens;
 }
 
+// ========== Social Auth Types ==========
+export interface GoogleLoginData {
+  access_token: string;
+}
+
+export interface FacebookLoginData {
+  access_token: string;
+}
+
+export interface SocialAuthResponse {
+  message: string;
+  user: User;
+  tokens: JWTTokens;
+}
+
 // ========== Change Password ==========
 export interface ChangePasswordData {
   old_password: string;
