@@ -79,7 +79,7 @@ export function Cart() {
 
       // Rediriger vers la page des commandes après un délai
       setTimeout(() => {
-        navigate('/commandes');
+        navigate('/mes-commandes');
       }, 2000);
     } catch (error: any) {
       console.error('Error initiating order:', error);
