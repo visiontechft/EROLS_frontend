@@ -7,6 +7,7 @@ import {
   Mail,
   Phone,
   MapPin,
+  MessageCircle,
 } from 'lucide-react';
 
 export function Footer() {
@@ -71,8 +72,8 @@ export function Footer() {
               </div>
             </Link>
             <p className="text-sm text-gray-400">
-              Votre destination pour des produits de qualité importés des États-Unis.
-              Commandez facilement et recevez rapidement.
+              Votre destination pour des produits chinois de qualité au Cameroun.
+              Commandez facilement et recevez en quelques heures.
             </p>
             <div className="flex space-x-4">
               {socialLinks.map((social) => (
@@ -131,26 +132,45 @@ export function Footer() {
               <li className="flex items-start space-x-3">
                 <MapPin className="h-5 w-5 text-orange-500 flex-shrink-0 mt-0.5" />
                 <span className="text-sm">
-                  Abidjan, Côte d'Ivoire
+                  Douala, Cameroun
                 </span>
               </li>
               <li className="flex items-start space-x-3">
                 <Phone className="h-5 w-5 text-orange-500 flex-shrink-0 mt-0.5" />
                 <a
-                  href="tel:+2250700000000"
+                  href="tel:+237674554947"
                   className="text-sm hover:text-orange-500 transition-colors"
                 >
-                  +225 07 00 00 00 00
+                  +237 674 55 49 47
+                </a>
+              </li>
+              <li className="flex items-start space-x-3">
+                <MessageCircle className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
+                <a
+                  href="https://wa.me/237695538075"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm hover:text-green-500 transition-colors"
+                >
+                  +237 695 53 80 75
                 </a>
               </li>
               <li className="flex items-start space-x-3">
                 <Mail className="h-5 w-5 text-orange-500 flex-shrink-0 mt-0.5" />
-                <a
-                  href="mailto:contact@erols.com"
-                  className="text-sm hover:text-orange-500 transition-colors"
-                >
-                  contact@erols.com
-                </a>
+                <div className="text-sm">
+                  <a
+                    href="mailto:contact@erols.com"
+                    className="hover:text-orange-500 transition-colors block"
+                  >
+                    contact@erols.com
+                  </a>
+                  <a
+                    href="mailto:services_client@erols.com"
+                    className="hover:text-orange-500 transition-colors block mt-1"
+                  >
+                    services_client@erols.com
+                  </a>
+                </div>
               </li>
             </ul>
           </div>
@@ -186,9 +206,24 @@ export function Footer() {
       <div className="border-t border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
-            <p className="text-sm text-gray-400">
-              &copy; {currentYear} EROLS EasyBuy. Tous droits réservés.
-            </p>
+            <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
+              <p className="text-sm text-gray-400">
+                &copy; {currentYear} EROLS EasyBuy. Tous droits réservés.
+              </p>
+              <span className="hidden md:inline text-gray-600">|</span>
+             <p className="text-sm text-gray-500">
+                Développé par{" "}
+                <a
+                  href="https://visiontech.vision"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-orange-500 font-semibold hover:underline"
+                >
+                  VISIONTECH
+                </a>
+              </p>
+
+            </div>
             <div className="flex items-center space-x-6">
               {footerLinks.legal.map((link) => (
                 <Link

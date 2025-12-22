@@ -38,8 +38,8 @@ export const Contact = () => {
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-800 mb-1">Téléphone</h3>
-                  <a href="tel:+237600000000" className="text-gray-600 hover:text-orange-500">
-                    +237 6 00 00 00 00
+                  <a href="tel:+237674554947" className="text-gray-600 hover:text-orange-500 block">
+                    +237 674 55 49 47
                   </a>
                 </div>
               </div>
@@ -52,8 +52,11 @@ export const Contact = () => {
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-800 mb-1">Email</h3>
-                  <a href="mailto:contact@erolseasybuy.com" className="text-gray-600 hover:text-orange-500">
-                    contact@erolseasybuy.com
+                  <a href="mailto:contact@erols.com" className="text-gray-600 hover:text-orange-500 block text-sm">
+                    contact@erols.com
+                  </a>
+                  <a href="mailto:services_client@erols.com" className="text-gray-600 hover:text-orange-500 block text-sm mt-1">
+                    services_client@erols.com
                   </a>
                 </div>
               </div>
@@ -80,13 +83,16 @@ export const Contact = () => {
               </div>
               <p className="mb-4">Pour une réponse rapide, contactez-nous sur WhatsApp !</p>
               <a
-                href="https://wa.me/237600000000"
+                href="https://wa.me/237695538075"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block w-full text-center px-6 py-3 bg-white text-green-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
               >
                 Ouvrir WhatsApp
               </a>
+              <p className="text-sm text-green-100 mt-3 text-center">
+                +237 695 53 80 75
+              </p>
             </div>
           </div>
 
@@ -123,7 +129,7 @@ export const Contact = () => {
                     type="tel"
                     {...register('phone', { required: 'Téléphone requis' })}
                     error={errors.phone?.message}
-                    placeholder="+237 6 00 00 00 00"
+                    placeholder="+237 6 XX XX XX XX"
                   />
                   <Input
                     label="Sujet *"
