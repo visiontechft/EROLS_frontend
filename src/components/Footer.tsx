@@ -132,7 +132,7 @@ export function Footer() {
               <li className="flex items-start space-x-3">
                 <MapPin className="h-5 w-5 text-orange-500 flex-shrink-0 mt-0.5" />
                 <span className="text-sm">
-                  Douala, Cameroun
+                  Bafoussam, Cameroun
                 </span>
               </li>
               <li className="flex items-start space-x-3">
