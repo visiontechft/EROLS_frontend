@@ -12,6 +12,12 @@ interface SocialLoginButtonsProps {
   onSuccess?: () => void;
   mode?: 'login' | 'register';
 }
+// Ajoutez au début du composant SocialLoginButtons
+React.useEffect(() => {
+  console.log('Google Client ID:', GOOGLE_CLIENT_ID ? 'Défini' : 'Non défini');
+  console.log('Facebook App ID:', FACEBOOK_APP_ID ? 'Défini' : 'Non défini');
+}, []);
+
 
 export function SocialLoginButtons({ 
   onError, 
