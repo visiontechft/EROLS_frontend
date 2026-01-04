@@ -7,17 +7,16 @@ import { Loader2 } from 'lucide-react';
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 const FACEBOOK_APP_ID = import.meta.env.VITE_FACEBOOK_APP_ID || '';
 
+// Debug en dehors du composant (sans hook)
+console.log('=== CONFIG SOCIAL LOGIN ===');
+console.log('Google Client ID:', GOOGLE_CLIENT_ID ? '✓ Défini' : '✗ Non défini');
+console.log('Facebook App ID:', FACEBOOK_APP_ID ? '✓ Défini' : '✗ Non défini');
+
 interface SocialLoginButtonsProps {
   onError?: (error: string) => void;
   onSuccess?: () => void;
   mode?: 'login' | 'register';
 }
-// Ajoutez au début du composant SocialLoginButtons
-React.useEffect(() => {
-  console.log('Google Client ID:', GOOGLE_CLIENT_ID ? 'Défini' : 'Non défini');
-  console.log('Facebook App ID:', FACEBOOK_APP_ID ? 'Défini' : 'Non défini');
-}, []);
-
 
 export function SocialLoginButtons({ 
   onError, 
@@ -28,16 +27,19 @@ export function SocialLoginButtons({
   const [isLoading, setIsLoading] = React.useState(false);
   const [loadingProvider, setLoadingProvider] = React.useState<'google' | 'facebook' | null>(null);
 
+  // Hook CORRECTEMENT placé à l'intérieur du composant
+  React.useEffect(() => {
+    console.log('Composant monté - Google:', GOOGLE_CLIENT_ID ? 'Défini' : 'Non défini');
+    console.log('Composant monté - Facebook:', FACEBOOK_APP_ID ? 'Défini' : 'Non défini');
+  }, []);
+
   const handleGoogleSuccess = async (credentialResponse: any) => {
     try {
       setIsLoading(true);
       setLoadingProvider('google');
       
-      // Utilise la méthode googleLogin du contexte
       await googleLogin(credentialResponse.credential);
       
-      // Le succès est déjà géré dans le contexte (navigation + toast)
-      // On appelle onSuccess si fourni pour des actions supplémentaires
       if (onSuccess) {
         onSuccess();
       }
@@ -65,11 +67,8 @@ export function SocialLoginButtons({
         setIsLoading(true);
         setLoadingProvider('facebook');
         
-        // Utilise la méthode facebookLogin du contexte
         await facebookLogin(response.accessToken);
         
-        // Le succès est déjà géré dans le contexte (navigation + toast)
-        // On appelle onSuccess si fourni pour des actions supplémentaires
         if (onSuccess) {
           onSuccess();
         }
@@ -93,8 +92,17 @@ export function SocialLoginButtons({
     }
   };
 
-  // Si aucun provider n'est configuré, ne rien afficher
+  // Si aucun provider n'est configuré, afficher un message de debug en dev
   if (!GOOGLE_CLIENT_ID && !FACEBOOK_APP_ID) {
+    if (import.meta.env.DEV) {
+      return (
+        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-sm text-yellow-800">
+            ⚠️ Aucun provider social configuré. Vérifiez vos variables d'environnement.
+          </p>
+        </div>
+      );
+    }
     return null;
   }
 
