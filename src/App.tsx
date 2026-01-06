@@ -4,6 +4,7 @@ import { CartProvider } from './contexts/CartContext';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { WhatsAppButton } from './components/WhatsAppButton';
+import { ScrollToTop } from './components/ScrollToTop'; // ⬅️ 1. Ajoutez cet import
 import { Home } from './pages/Home';
 import { Products } from './pages/Products';
 import { ProductDetail } from './pages/ProductDetail';
@@ -25,6 +26,7 @@ import { Privacy } from './pages/Privacy';
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop /> {/* ⬅️ 2. Ajoutez cette ligne */}
       <AuthProvider>
         <CartProvider>
           <div className="flex flex-col min-h-screen">
