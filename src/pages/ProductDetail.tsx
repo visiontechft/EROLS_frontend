@@ -206,7 +206,7 @@ export function ProductDetail() {
 
   const images = product.images?.sort((a, b) => a.order - b.order) || [];
   const currentImage = images[selectedImageIndex] || images[0];
-  const imageUrl = currentImage?.url || product.image_url || '/placeholder-product.jpg';
+  const imageUrl = currentImage?.url || product.image_url;
 
   const hasDiscount = product.original_price && product.original_price > product.price;
   const discountPercent = hasDiscount 
@@ -237,7 +237,13 @@ export function ProductDetail() {
                  </div>
                )}
                
-               <ProductImageZoom src={imageUrl} alt={product.name} />
+               {imageUrl ? (
+                 <ProductImageZoom src={imageUrl} alt={product.name} />
+               ) : (
+                 <div className="aspect-square w-full bg-gray-100 rounded-2xl border-2 border-gray-100 flex items-center justify-center">
+                   <Package className="text-gray-300" size={64} />
+                 </div>
+               )}
                
                {images.length > 1 && (
                  <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between px-4 pointer-events-none z-20 lg:hidden">
