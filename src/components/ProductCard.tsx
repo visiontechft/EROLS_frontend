@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ShoppingCart, Star, Eye, Package } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Badge, StockBadge } from './ui/Badge';
+import { ProductImage } from './ProductImage';
 import { useCart } from '../contexts/CartContext';
 import type { Product } from '../types';
 
@@ -29,7 +30,6 @@ export function ProductCard({
     onQuickView?.(product);
   };
 
-  const imageUrl = product.image_url || '/placeholder-product.jpg';
   const hasDiscount = product.original_price && product.original_price > product.price;
 
   return (
@@ -39,14 +39,10 @@ export function ProductCard({
     >
       {/* Image Container */}
       <div className="relative aspect-square overflow-hidden bg-gray-100">
-        <img
-          src={imageUrl}
+        <ProductImage
+          src={product.image_url}
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-          loading="lazy"
-          onError={(e) => {
-            e.currentTarget.src = '/placeholder-product.jpg';
-          }}
         />
 
         {/* Badges */}

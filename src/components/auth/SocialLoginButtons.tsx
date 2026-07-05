@@ -82,7 +82,7 @@ export function SocialLoginButtons({
             theme="outline"
             size="large"
             text={mode === 'login' ? 'continue_with' : 'signup_with'}
-            width="100%"
+            width="320"
             locale="fr"
           />
         </GoogleOAuthProvider>

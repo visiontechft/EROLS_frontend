@@ -7,6 +7,7 @@ import { useCities } from '../hooks/useCities';
 import { Button } from '../components/ui/Button';
 import { ConfirmDialog } from '../components/ui/Modal';
 import { QuartierSelectModal } from '../components/QuartierSelectModal';
+import { ProductImage } from '../components/ProductImage';
 import type { City } from '../types';
 import { toast } from 'react-toastify';
 
@@ -122,7 +123,6 @@ export function Cart() {
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
             {cart.items.map((item) => {
-              const imageUrl = item.product.image_url || '/placeholder-product.jpg';
               const itemTotal = (item.product.price || 0) * item.quantity;
 
               return (
@@ -137,8 +137,8 @@ export function Cart() {
                       className="flex-shrink-0"
                     >
                       <div className="w-24 h-24 bg-gray-50 rounded-xl overflow-hidden border-2 border-gray-100">
-                        <img
-                          src={imageUrl}
+                        <ProductImage
+                          src={item.product.image_url}
                           alt={item.product.name}
                           className="w-full h-full object-cover hover:scale-110 transition-transform"
                         />

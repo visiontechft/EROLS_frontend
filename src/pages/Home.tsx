@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, Shield, Truck, ShoppingCart, MessageCircle, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import { productsApi, categoriesApi, ordersApi } from '../lib/api';
 import { ProductGrid } from '../components/ProductCard';
+import { ProductImage } from '../components/ProductImage';
 import { Button } from '../components/ui/Button';
 import { PageLoader } from '../components/ui/LoadingSpinner';
 import { QuartierSelectModal } from '../components/QuartierSelectModal';
@@ -139,10 +140,10 @@ export function Home() {
               <div className="relative h-[350px] lg:h-[520px] bg-white rounded-2xl shadow-2xl overflow-hidden flex">
                 {/* Product Image Side */}
                 <div className="w-1/2 bg-gray-50 flex items-center justify-center p-6 relative">
-                  <img 
-                    src={currentProduct.image_url} 
-                    alt={currentProduct.name} 
-                    className="max-h-full max-w-full object-contain mix-blend-multiply" 
+                  <ProductImage
+                    src={currentProduct.image_url}
+                    alt={currentProduct.name}
+                    className="max-h-full max-w-full object-contain mix-blend-multiply"
                   />
                   <div className="absolute top-4 left-4 bg-orange-500 text-white px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider">
                     {currentProduct.category?.name || 'Produit'}
