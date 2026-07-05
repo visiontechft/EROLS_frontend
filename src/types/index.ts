@@ -223,10 +223,6 @@ export interface GoogleLoginData {
   access_token: string;
 }
 
-export interface FacebookLoginData {
-  access_token: string;
-}
-
 export interface SocialAuthResponse {
   message: string;
   user: User;
