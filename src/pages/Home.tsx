@@ -1,48 +1,49 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, TrendingUp, Shield, Truck, Headphones, ShoppingCart, MessageCircle, ChevronLeft, ChevronRight, MapPin, X, Eye } from 'lucide-react';
-import { productsApi, categoriesApi, citiesApi, ordersApi } from '../lib/api';
+import { ArrowRight, Shield, Truck, ShoppingCart, MessageCircle, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
+import { productsApi, categoriesApi, ordersApi } from '../lib/api';
 import { ProductGrid } from '../components/ProductCard';
 import { Button } from '../components/ui/Button';
 import { PageLoader } from '../components/ui/LoadingSpinner';
+import { QuartierSelectModal } from '../components/QuartierSelectModal';
 import { useCart } from '../contexts/CartContext';
-import type { Product, Category, City } from '../types';
+import { useCities } from '../hooks/useCities';
+import type { Product, Category } from '../types';
 import { toast } from 'react-toastify';
 
 export function Home() {
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { cities } = useCities();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [categorizedProducts, setCategorizedProducts] = useState<Product[]>([]);
-  const [cities, setCities] = useState<City[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   const [currentProductIndex, setCurrentProductIndex] = useState(0);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [showCityModal, setShowCityModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [submittingCityId, setSubmittingCityId] = useState<number | null>(null);
 
   const messages = [
-    { title: "Achetez vos produits chinois", subtitle: "Étant au Cameroun à des prix imbattables", icon: "🛍️" },
-    { title: "Recevez vos produits", subtitle: "À domicile ou dans un point de retrait de votre choix", icon: "🚚" },
+    { title: "Achetez vos produits chinois", subtitle: "Disponibles à Bafoussam, à des prix imbattables", icon: "🛍️" },
+    { title: "Recevez vos produits", subtitle: "À domicile ou dans un point de retrait de votre quartier", icon: "🚚" },
     { title: "Payez à la livraison", subtitle: "Sans inquiétude, en toute sécurité", icon: "💰" }
   ];
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [productsResponse, categoriesData, citiesData] = await Promise.all([
+        const [productsResponse, categoriesData] = await Promise.all([
           productsApi.getProducts({ page_size: 20 }),
           categoriesApi.getCategories(),
-          citiesApi.getCities(),
         ]);
-        
+
         const productsList = productsResponse.results || [];
         setProducts(productsList);
         setCategories(categoriesData.slice(0, 6));
-        setCities(citiesData);
-        
+
         // FIX 1: Utiliser directement les premiers produits si pas de correspondance par catégorie
         const productsByCategory = categoriesData.slice(0, 6)
           .map(cat => productsList.find(p => p.category?.id === cat.id))
@@ -228,7 +229,7 @@ export function Home() {
               Comment passer votre commande ?
             </h2>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              Suivez ces étapes simples pour recevoir vos produits chinois au Cameroun en toute sécurité
+              Suivez ces étapes simples pour recevoir vos produits chinois à Bafoussam en toute sécurité
             </p>
           </div>
 
@@ -339,43 +340,30 @@ export function Home() {
         <ProductGrid products={products.slice(0, 12)} />
       </section>
 
-      {/* City Selection Modal */}
-      {showCityModal && selectedProduct && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-8 max-w-md w-full relative animate-in fade-in zoom-in duration-200">
-            <button onClick={() => setShowCityModal(false)} className="absolute right-6 top-6 text-gray-400 hover:text-gray-900">
-              <X />
-            </button>
-            <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
-              <MapPin className="text-orange-500" /> Votre Ville ?
-            </h3>
-            <p className="text-gray-500 mb-6">Sélectionnez votre ville pour finaliser la commande sur WhatsApp.</p>
-            <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2">
-              {cities.map(city => (
-                <button 
-                  key={city.id} 
-                  onClick={async () => {
-                    try {
-                      const res = await ordersApi.initiateOrder({ 
-                        product_id: selectedProduct.id, 
-                        city_id: city.id, 
-                        quantity: 1 
-                      });
-                      window.open(res.whatsapp_url, '_blank');
-                      setShowCityModal(false);
-                    } catch (error) {
-                      toast.error('Erreur lors de la commande');
-                    }
-                  }}
-                  className="w-full p-4 border-2 border-gray-100 rounded-2xl hover:border-orange-500 hover:bg-orange-50 flex justify-between items-center transition-all group"
-                >
-                  <span className="font-bold text-gray-800">{city.name}</span>
-                  <MessageCircle className="text-gray-300 group-hover:text-green-500 transition-colors" />
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+      {/* Modal de sélection de quartier */}
+      {selectedProduct && (
+        <QuartierSelectModal
+          isOpen={showCityModal}
+          onClose={() => setShowCityModal(false)}
+          quartiers={cities}
+          submittingId={submittingCityId}
+          onSelect={async (city) => {
+            try {
+              setSubmittingCityId(city.id);
+              const res = await ordersApi.initiateOrder({
+                product_id: selectedProduct.id,
+                city_id: city.id,
+                quantity: 1,
+              });
+              window.open(res.whatsapp_url, '_blank');
+              setShowCityModal(false);
+            } catch (error) {
+              toast.error('Erreur lors de la commande');
+            } finally {
+              setSubmittingCityId(null);
+            }
+          }}
+        />
       )}
     </div>
   );

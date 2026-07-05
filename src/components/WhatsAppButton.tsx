@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { MessageCircle, X } from 'lucide-react';
-
-const WHATSAPP_NUMBER = '+237695538075'; // Replace with actual WhatsApp number
+import { CONTACT, buildWhatsAppUrl } from '../lib/config';
 
 export function WhatsAppButton() {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,9 +17,7 @@ export function WhatsAppButton() {
     const messageText = text || message;
     if (!messageText.trim()) return;
 
-    const encodedMessage = encodeURIComponent(messageText);
-    const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
-    window.open(whatsappUrl, '_blank');
+    window.open(buildWhatsAppUrl(CONTACT.whatsappNumber, messageText), '_blank');
     setIsOpen(false);
     setMessage('');
   };

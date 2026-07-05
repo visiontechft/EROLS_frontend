@@ -3,6 +3,7 @@ import { Mail, Phone, MapPin, MessageCircle, Send } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { toast } from 'react-toastify';
+import { CONTACT, buildWhatsAppUrl } from '../lib/config';
 
 interface ContactFormData {
   name: string;
@@ -38,8 +39,8 @@ export const Contact = () => {
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-800 mb-1">Téléphone</h3>
-                  <a href="tel:+237674554947" className="text-gray-600 hover:text-orange-500 block">
-                    +237 674 55 49 47
+                  <a href={`tel:${CONTACT.phoneNumber.replace(/\s/g, '')}`} className="text-gray-600 hover:text-orange-500 block">
+                    {CONTACT.phoneNumber}
                   </a>
                 </div>
               </div>
@@ -52,11 +53,11 @@ export const Contact = () => {
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-800 mb-1">Email</h3>
-                  <a href="mailto:contact@erols.com" className="text-gray-600 hover:text-orange-500 block text-sm">
-                    contact@erols.com
+                  <a href={`mailto:${CONTACT.email}`} className="text-gray-600 hover:text-orange-500 block text-sm">
+                    {CONTACT.email}
                   </a>
-                  <a href="mailto:services_client@erols.com" className="text-gray-600 hover:text-orange-500 block text-sm mt-1">
-                    services_client@erols.com
+                  <a href={`mailto:${CONTACT.supportEmail}`} className="text-gray-600 hover:text-orange-500 block text-sm mt-1">
+                    {CONTACT.supportEmail}
                   </a>
                 </div>
               </div>
@@ -70,7 +71,7 @@ export const Contact = () => {
                 <div>
                   <h3 className="font-bold text-gray-800 mb-1">Adresse</h3>
                   <p className="text-gray-600">
-                    Douala, Cameroun
+                    {CONTACT.address}
                   </p>
                 </div>
               </div>
@@ -83,7 +84,7 @@ export const Contact = () => {
               </div>
               <p className="mb-4">Pour une réponse rapide, contactez-nous sur WhatsApp !</p>
               <a
-                href="https://wa.me/237695538075"
+                href={buildWhatsAppUrl(CONTACT.whatsappNumber)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block w-full text-center px-6 py-3 bg-white text-green-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
@@ -91,7 +92,7 @@ export const Contact = () => {
                 Ouvrir WhatsApp
               </a>
               <p className="text-sm text-green-100 mt-3 text-center">
-                +237 695 53 80 75
+                {CONTACT.whatsappDisplay}
               </p>
             </div>
           </div>

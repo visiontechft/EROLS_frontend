@@ -1,15 +1,17 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { 
-  MapPin, Share2, Star, ChevronLeft, ChevronRight, 
+import {
+  Share2, Star, ChevronLeft, ChevronRight,
   Truck, Shield, Package, MessageCircle, ShoppingCart, X, Clock, Check
 } from 'lucide-react';
-import { productsApi, citiesApi, ordersApi } from '../lib/api';
+import { productsApi, ordersApi } from '../lib/api';
 import { useCart } from '../contexts/CartContext';
+import { useCities } from '../hooks/useCities';
 import { Button } from '../components/ui/Button';
 import { Badge, StockBadge } from '../components/ui/Badge';
 import { PageLoader } from '../components/ui/LoadingSpinner';
-import type { Product, City } from '../types';
+import { QuartierSelectModal } from '../components/QuartierSelectModal';
+import type { Product } from '../types';
 import { toast } from 'react-toastify';
 
 // --- COMPOSANT DE ZOOM HAUTE PRÉCISION (Desktop + Mobile) ---
@@ -167,23 +169,20 @@ export function ProductDetail() {
   const { addToCart } = useCart();
 
   const [product, setProduct] = useState<Product | null>(null);
-  const [cities, setCities] = useState<City[]>([]);
+  const { cities } = useCities();
   const [isLoading, setIsLoading] = useState(true);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [showCityModal, setShowCityModal] = useState(false);
+  const [submittingCityId, setSubmittingCityId] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       if (!slug) return;
       try {
         setIsLoading(true);
-        const [productData, citiesData] = await Promise.all([
-          productsApi.getProduct(slug),
-          citiesApi.getCities(),
-        ]);
+        const productData = await productsApi.getProduct(slug);
         setProduct(productData);
-        setCities(citiesData);
       } catch (error) {
         toast.error('Erreur de chargement');
         navigate('/produits');
@@ -408,54 +407,29 @@ export function ProductDetail() {
         </div>
       </div>
 
-      {/* Modal de sélection de ville */}
-      {showCityModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-8 max-w-md w-full relative animate-in fade-in zoom-in duration-200 shadow-2xl">
-            <button 
-              onClick={() => setShowCityModal(false)} 
-              className="absolute right-6 top-6 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-full p-2 transition-all"
-            >
-              <X size={24} />
-            </button>
-            
-            <div className="mb-6">
-              <div className="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center mb-4">
-                <MapPin className="text-orange-600" size={32} />
-              </div>
-              <h3 className="text-2xl font-black mb-2">Sélectionnez votre ville</h3>
-              <p className="text-gray-600">Choisissez votre ville pour finaliser la commande sur WhatsApp avec livraison express.</p>
-            </div>
-            
-            <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2">
-              {cities.map(city => (
-                <button 
-                  key={city.id} 
-                  onClick={async () => {
-                    try {
-                      const res = await ordersApi.initiateOrder({ 
-                        product_id: product.id, 
-                        city_id: city.id, 
-                        quantity 
-                      });
-                      window.open(res.whatsapp_url, '_blank');
-                      setShowCityModal(false);
-                    } catch (error) {
-                      toast.error('Erreur lors de la commande');
-                    }
-                  }}
-                  className="w-full p-4 border-2 border-gray-100 rounded-2xl hover:border-orange-500 hover:bg-orange-50 flex justify-between items-center transition-all group"
-                >
-                  <span className="font-bold text-gray-800">{city.name}</span>
-                  <div className="flex items-center gap-2 text-gray-400 group-hover:text-green-600 transition-colors">
-                    <MessageCircle size={20} />
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modal de sélection de quartier */}
+      <QuartierSelectModal
+        isOpen={showCityModal}
+        onClose={() => setShowCityModal(false)}
+        quartiers={cities}
+        submittingId={submittingCityId}
+        onSelect={async (city) => {
+          try {
+            setSubmittingCityId(city.id);
+            const res = await ordersApi.initiateOrder({
+              product_id: product.id,
+              city_id: city.id,
+              quantity,
+            });
+            window.open(res.whatsapp_url, '_blank');
+            setShowCityModal(false);
+          } catch (error) {
+            toast.error('Erreur lors de la commande');
+          } finally {
+            setSubmittingCityId(null);
+          }
+        }}
+      />
     </div>
   );
 }

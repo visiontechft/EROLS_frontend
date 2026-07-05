@@ -7,10 +7,13 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import type { RegisterData } from '../types';
 import { SocialLoginButtons } from '../components/auth/SocialLoginButtons';
+import { Logo } from '../components/Logo';
+import { useCities } from '../hooks/useCities';
 
 export function Register() {
   const { register: registerUser } = useAuth();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const { cities } = useCities();
 
   const {
     register,
@@ -51,16 +54,8 @@ export function Register() {
       <div className="max-w-2xl w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center justify-center space-x-2 mb-6">
-            <div className="flex items-center justify-center w-12 h-12 bg-orange-500 rounded-lg">
-              <span className="text-white font-bold text-2xl">E</span>
-            </div>
-            <div>
-              <span className="text-2xl font-bold text-gray-900">EROLS</span>
-              <span className="text-2xl font-bold text-orange-500 ml-1">
-                EasyBuy
-              </span>
-            </div>
+          <Link to="/" className="inline-flex items-center justify-center mb-6">
+            <Logo className="h-12 w-auto" />
           </Link>
           <h2 className="text-3xl font-bold text-gray-900">Créer un compte</h2>
           <p className="mt-2 text-gray-600">
@@ -144,20 +139,33 @@ export function Register() {
                 required
               />
 
-              <Input
-                label="Ville"
-                placeholder="Yaoundé"
-                leftIcon={<MapPin className="h-5 w-5" />}
-                {...register('city', {
-                  required: 'La ville est requise',
-                  minLength: {
-                    value: 2,
-                    message: 'La ville doit contenir au moins 2 caractères',
-                  },
-                })}
-                error={errors.city?.message}
-                required
-              />
+              <div>
+                <label htmlFor="register-city" className="block text-sm font-medium text-gray-700 mb-1">
+                  Quartier<span className="text-red-500 ml-1">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    <MapPin className="h-5 w-5" />
+                  </div>
+                  <select
+                    id="register-city"
+                    className={`w-full pl-10 pr-4 py-2 border rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+                      errors.city ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'
+                    }`}
+                    {...register('city', { required: 'Le quartier est requis' })}
+                  >
+                    <option value="">Sélectionnez votre quartier</option>
+                    {cities.map((city) => (
+                      <option key={city.id} value={city.name}>
+                        {city.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {errors.city?.message && (
+                  <p className="mt-1 text-sm text-red-600">{errors.city.message}</p>
+                )}
+              </div>
             </div>
 
             {/* Password */}

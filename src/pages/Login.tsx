@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { SocialLoginButtons } from '../components/auth/SocialLoginButtons';
+import { Logo } from '../components/Logo';
 import type { LoginCredentials } from '../types';
 
 export function Login() {
@@ -47,16 +48,8 @@ export function Login() {
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center justify-center space-x-2 mb-6">
-            <div className="flex items-center justify-center w-12 h-12 bg-orange-500 rounded-lg">
-              <span className="text-white font-bold text-2xl">E</span>
-            </div>
-            <div>
-              <span className="text-2xl font-bold text-gray-900">EROLS</span>
-              <span className="text-2xl font-bold text-orange-500 ml-1">
-                EasyBuy
-              </span>
-            </div>
+          <Link to="/" className="inline-flex items-center justify-center mb-6">
+            <Logo className="h-12 w-auto" />
           </Link>
           <h2 className="text-3xl font-bold text-gray-900">Connexion</h2>
           <p className="mt-2 text-gray-600">

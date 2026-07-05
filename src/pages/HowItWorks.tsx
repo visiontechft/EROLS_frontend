@@ -10,7 +10,7 @@ export const HowItWorks = () => {
             Comment ça marche ?
           </h1>
           <p className="text-lg lg:text-2xl text-white/90 max-w-3xl mx-auto font-medium">
-            Achetez vos produits disponibles au Cameroun en 4 étapes simples. 
+            Achetez vos produits disponibles à Bafoussam en 4 étapes simples.
             Commandez et recevez en 10 minutes à 1h max avec paiement à la livraison.
           </p>
         </div>
@@ -129,7 +129,7 @@ export const HowItWorks = () => {
                 Livraison express locale
               </h3>
               <p className="text-gray-600 leading-relaxed">
-                Tous nos produits sont déjà disponibles au Cameroun. Pas d'attente, pas d'import : commandez et recevez en 10 minutes à 1h max dans votre ville.
+                Tous nos produits sont déjà disponibles à Bafoussam. Pas d'attente, pas d'import : commandez et recevez en 10 minutes à 1h max dans votre quartier.
               </p>
             </div>
 
@@ -173,7 +173,7 @@ export const HowItWorks = () => {
                 Combien de temps prend la livraison ?
               </h3>
               <p className="text-gray-600 leading-relaxed">
-                Pour les produits en stock au Cameroun : livraison ultra-rapide en <strong className="text-orange-600">10 minutes à 1h maximum</strong> après validation de votre commande sur WhatsApp. C'est l'un de nos plus grands avantages !
+                Pour les produits en stock à Bafoussam : livraison ultra-rapide en <strong className="text-orange-600">10 minutes à 1h maximum</strong> après validation de votre commande sur WhatsApp. C'est l'un de nos plus grands avantages !
               </p>
             </div>
 
@@ -209,7 +209,7 @@ export const HowItWorks = () => {
                 Comment suivre ma commande ?
               </h3>
               <p className="text-gray-600 leading-relaxed">
-                Après validation sur WhatsApp, notre équipe vous tient informé régulièrement de l'avancement : achat confirmé, produit expédié, arrivée au Cameroun, et livraison programmée. Tout se passe sur WhatsApp.
+                Après validation sur WhatsApp, notre équipe vous tient informé régulièrement de l'avancement : achat confirmé, produit expédié, arrivée à Bafoussam, et livraison programmée dans votre quartier. Tout se passe sur WhatsApp.
               </p>
             </div>
           </div>

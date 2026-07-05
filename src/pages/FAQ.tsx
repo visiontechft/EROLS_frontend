@@ -30,12 +30,12 @@ export const FAQ = () => {
           a: 'Comptez entre 2 et 4 semaines après validation de votre commande. Ce délai inclut l\'achat, le transport et la douane.',
         },
         {
-          q: 'Livrez-vous partout au Cameroun ?',
-          a: 'Oui, nous livrons dans toutes les grandes villes du Cameroun : Douala, Yaoundé, Bafoussam, Garoua, etc.',
+          q: 'Livrez-vous dans tout Bafoussam ?',
+          a: 'Oui, nous livrons dans les principaux quartiers de Bafoussam. Sélectionnez votre quartier au moment de la commande pour finaliser sur WhatsApp.',
         },
         {
           q: 'Quels sont les frais de livraison ?',
-          a: 'Les frais de livraison sont calculés en fonction de votre ville et du poids de votre commande. Ils vous seront communiqués avant validation.',
+          a: 'Les frais de livraison sont calculés en fonction de votre quartier et du poids de votre commande. Ils vous seront communiqués avant validation.',
         },
       ],
     },

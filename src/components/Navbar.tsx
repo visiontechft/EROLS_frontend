@@ -14,6 +14,7 @@ import {
 import { useAuth } from '../hooks/useAuth';
 import { useCart } from '../contexts/CartContext';
 import { Button } from './ui/Button';
+import { Logo } from './Logo';
 
 export function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -77,16 +78,8 @@ export function Navbar() {
         {/* Top Bar */}
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3">
-            <div className="flex items-center justify-center w-10 h-10 bg-orange-500 rounded-lg flex-shrink-0">
-              <span className="text-white font-bold text-xl">E</span>
-            </div>
-            <div className="hidden sm:flex flex-col">
-              <span className="text-lg font-bold text-gray-900 leading-none">EROLS</span>
-              <span className="text-sm font-semibold text-orange-500 leading-none mt-0.5">
-                EasyBuy
-              </span>
-            </div>
+          <Link to="/" className="flex items-center">
+            <Logo className="h-9 w-auto sm:h-10" />
           </Link>
 
           {/* Desktop Navigation */}
