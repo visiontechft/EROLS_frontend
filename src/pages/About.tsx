@@ -4,18 +4,18 @@ export const About = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-4xl font-bold text-gray-800 mb-6 text-center">À propos d'EROLS EasyBuy</h1>
+        <h1 className="text-4xl font-bold text-gray-800 mb-6 text-center">À propos d'EROLS</h1>
         <p className="text-xl text-gray-600 text-center mb-12">
-          Le marché chinois à votre porte
+          Le marché chinois à la porte de Bafoussam
         </p>
 
         <div className="bg-white rounded-xl shadow-md p-8 mb-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Notre Mission</h2>
           <p className="text-gray-600 mb-4">
-            EROLS EasyBuy est une plateforme e-commerce innovante qui révolutionne l'importation de produits chinois au Cameroun. Notre mission est de rendre accessible à tous les Camerounais des produits de qualité à des prix imbattables, directement depuis la Chine.
+            EROLS est une plateforme e-commerce innovante qui révolutionne l'importation de produits chinois à Bafoussam. Notre mission est de rendre accessible à tous les habitants de Bafoussam des produits de qualité à des prix imbattables, directement depuis la Chine.
           </p>
           <p className="text-gray-600">
-            Nous croyons que chaque Camerounais mérite d'avoir accès aux mêmes produits et aux mêmes prix que partout dans le monde, sans les contraintes et complications de l'importation.
+            Nous croyons que chaque Bafoussamois mérite d'avoir accès aux mêmes produits et aux mêmes prix que partout dans le monde, sans les contraintes et complications de l'importation.
           </p>
         </div>
 
@@ -56,7 +56,7 @@ export const About = () => {
         <div className="bg-gradient-to-r from-orange-500 to-blue-600 rounded-xl shadow-md p-8 text-white text-center">
           <h2 className="text-2xl font-bold mb-4">Rejoignez-nous !</h2>
           <p className="text-lg mb-6">
-            Des milliers de Camerounais ont déjà fait confiance à EROLS EasyBuy. Et vous ?
+            Des milliers de Bafoussamois ont déjà fait confiance à EROLS. Et vous ?
           </p>
         </div>
       </div>

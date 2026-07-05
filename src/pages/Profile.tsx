@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { User, Mail, Phone, MapPin, Lock, Save } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { authApi } from '../lib/api';
+import { useCities } from '../hooks/useCities';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { PageLoader } from '../components/ui/LoadingSpinner';
@@ -24,6 +25,7 @@ interface UpdateProfileData {
 
 export function Profile() {
   const { user, updateUser, isLoading } = useAuth();
+  const { cities } = useCities();
   const [activeTab, setActiveTab] = useState<ProfileTab>('info');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -39,7 +41,7 @@ export function Profile() {
       phone: user?.phone || '',
       whatsapp: user?.whatsapp || '',
       address: user?.address || '',
-      city: user?.city || 'Douala',
+      city: user?.city || '',
     },
   });
 
@@ -243,15 +245,33 @@ export function Profile() {
                         error={profileErrors.address?.message}
                       />
 
-                      <Input
-                        label="Ville"
-                        placeholder="Douala, Yaoundé..."
-                        {...registerProfile('city', {
-                          required: 'La ville est requise',
-                        })}
-                        error={profileErrors.city?.message}
-                        required
-                      />
+                      <div>
+                        <label htmlFor="profile-city" className="block text-sm font-medium text-gray-700 mb-1">
+                          Quartier<span className="text-red-500 ml-1">*</span>
+                        </label>
+                        <div className="relative">
+                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                            <MapPin className="h-5 w-5" />
+                          </div>
+                          <select
+                            id="profile-city"
+                            className={`w-full pl-10 pr-4 py-2 border rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+                              profileErrors.city ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'
+                            }`}
+                            {...registerProfile('city', { required: 'Le quartier est requis' })}
+                          >
+                            <option value="">Sélectionnez votre quartier</option>
+                            {cities.map((c) => (
+                              <option key={c.id} value={c.name}>
+                                {c.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        {profileErrors.city?.message && (
+                          <p className="mt-1 text-sm text-red-600">{profileErrors.city.message}</p>
+                        )}
+                      </div>
                     </div>
                   </div>
 

@@ -87,7 +87,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       setUser(authUser.user);
 
-      toast.success('Inscription réussie! Bienvenue sur EROLS EasyBuy!');
+      toast.success('Inscription réussie! Bienvenue sur EROLS!');
     } catch (error) {
       const apiError = error as ApiError;
 

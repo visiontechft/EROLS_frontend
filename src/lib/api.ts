@@ -108,7 +108,7 @@ export const authApi = {
       last_name: data.last_name || '',
       whatsapp: data.whatsapp || data.phone,
       address: data.address || '',
-      city: data.city || 'Douala',
+      city: data.city || '',
       user_type: data.user_type || 'client',
     };
     

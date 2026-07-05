@@ -6,6 +6,7 @@ import { PageLoader } from '../components/ui/LoadingSpinner';
 import { Badge } from '../components/ui/Badge';
 import type { Order, OrderStats } from '../types';
 import { toast } from 'react-toastify';
+import { buildWhatsAppUrl } from '../lib/config';
 
 export function Orders() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -181,7 +182,7 @@ export function Orders() {
                     </p>
                     <div className="flex gap-3">
                       <a
-                        href={`https://wa.me/${order.city_name === 'Douala' ? '237691563244' : order.city_name === 'Yaoundé' ? '237698566659' : '237659270205'}`}
+                        href={buildWhatsAppUrl(order.whatsapp_number)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center px-4 py-2 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 transition-colors"
@@ -209,7 +210,7 @@ export function Orders() {
               </h3>
               <ol className="list-decimal list-inside space-y-2 text-sm text-blue-800">
                 <li>Vous cliquez sur "Commander" sur un produit</li>
-                <li>Vous choisissez votre ville (Douala, Yaoundé ou Bafoussam)</li>
+                <li>Vous choisissez votre quartier à Bafoussam</li>
                 <li>Vous êtes redirigé vers WhatsApp avec un message pré-rempli</li>
                 <li>Vous finalisez votre commande directement avec notre équipe sur WhatsApp</li>
               </ol>

@@ -1,3 +1,5 @@
+import { CONTACT } from '../lib/config';
+
 export const Privacy = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -9,7 +11,7 @@ export const Privacy = () => {
           <section>
             <h2 className="text-2xl font-bold text-gray-800 mb-4">1. Introduction</h2>
             <p className="text-gray-600">
-              EROLS EasyBuy accorde une grande importance à la protection de vos données personnelles. Cette politique de confidentialité explique comment nous collectons, utilisons, partageons et protégeons vos informations personnelles.
+              EROLS accorde une grande importance à la protection de vos données personnelles. Cette politique de confidentialité explique comment nous collectons, utilisons, partageons et protégeons vos informations personnelles.
             </p>
           </section>
 
@@ -18,7 +20,7 @@ export const Privacy = () => {
             <p className="text-gray-600 mb-2">Nous collectons les informations suivantes :</p>
             <ul className="list-disc list-inside text-gray-600 space-y-1 ml-4">
               <li>Informations d'identification : nom, prénom, email, téléphone</li>
-              <li>Informations de livraison : adresse, ville</li>
+              <li>Informations de livraison : adresse, quartier</li>
               <li>Informations de commande : produits commandés, montants, historique</li>
               <li>Données de navigation : pages visitées, durée de visite</li>
             </ul>
@@ -77,7 +79,7 @@ export const Privacy = () => {
               <li>Droit à la portabilité de vos données</li>
             </ul>
             <p className="text-gray-600 mt-2">
-              Pour exercer ces droits, contactez-nous à : contact@erolseasybuy.com
+              Pour exercer ces droits, contactez-nous à : {CONTACT.email}
             </p>
           </section>
 
@@ -108,7 +110,7 @@ export const Privacy = () => {
               Pour toute question concernant cette politique de confidentialité ou l'utilisation de vos données personnelles, contactez-nous :
             </p>
             <ul className="list-none text-gray-600 space-y-1 ml-4 mt-2">
-              <li>Email : contact@erolseasybuy.com</li>
+              <li>Email : {CONTACT.email}</li>
               <li>Téléphone : +237 6 00 00 00 00</li>
               <li>WhatsApp : +237 6 00 00 00 00</li>
             </ul>

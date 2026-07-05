@@ -109,6 +109,7 @@ export interface Order {
   product_name: string;
   product_price: string;
   city_name: string;
+  whatsapp_number: string;
   status: OrderStatus;
   status_display: string;
   created_at: string;

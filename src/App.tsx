@@ -9,12 +9,10 @@ import { Home } from './pages/Home';
 import { Products } from './pages/Products';
 import { ProductDetail } from './pages/ProductDetail';
 import { Cart } from './pages/Cart';
-import { Checkout } from './pages/Checkout';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Profile } from './pages/Profile';
 import { Orders } from './pages/Orders';
-import { OrderDetail } from './pages/OrderDetail';
 import { SpecialRequest } from './pages/SpecialRequest';
 import { About } from './pages/About';
 import { HowItWorks } from './pages/HowItWorks';
@@ -37,12 +35,10 @@ function App() {
                 <Route path="/produits" element={<Products />} />
                 <Route path="/produits/:slug" element={<ProductDetail />} />
                 <Route path="/panier" element={<Cart />} />
-                <Route path="/commander" element={<Checkout />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/inscription" element={<Register />} />
                 <Route path="/profil" element={<Profile />} />
                 <Route path="/mes-commandes" element={<Orders />} />
-                <Route path="/commande/:id" element={<OrderDetail />} />
                 <Route path="/demande-speciale" element={<SpecialRequest />} />
                 <Route path="/a-propos" element={<About />} />
                 <Route path="/comment-ca-marche" element={<HowItWorks />} />

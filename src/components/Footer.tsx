@@ -9,6 +9,8 @@ import {
   MapPin,
   MessageCircle,
 } from 'lucide-react';
+import { Logo } from './Logo';
+import { CONTACT, buildWhatsAppUrl } from '../lib/config';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -60,19 +62,11 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand Section */}
           <div className="space-y-4">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="flex items-center justify-center w-10 h-10 bg-orange-500 rounded-lg">
-                <span className="text-white font-bold text-xl">E</span>
-              </div>
-              <div>
-                <span className="text-xl font-bold text-white">EROLS</span>
-                <span className="text-xl font-bold text-orange-500 ml-1">
-                  EasyBuy
-                </span>
-              </div>
+            <Link to="/" className="inline-flex items-center bg-white rounded-lg p-2">
+              <Logo className="h-8 w-auto" />
             </Link>
             <p className="text-sm text-gray-400">
-              Votre destination pour des produits chinois de qualité au Cameroun.
+              Votre destination pour des produits chinois de qualité à Bafoussam.
               Commandez facilement et recevez en quelques heures.
             </p>
             <div className="flex space-x-4">
@@ -132,43 +126,43 @@ export function Footer() {
               <li className="flex items-start space-x-3">
                 <MapPin className="h-5 w-5 text-orange-500 flex-shrink-0 mt-0.5" />
                 <span className="text-sm">
-                  Bafoussam, Cameroun
+                  {CONTACT.address}
                 </span>
               </li>
               <li className="flex items-start space-x-3">
                 <Phone className="h-5 w-5 text-orange-500 flex-shrink-0 mt-0.5" />
                 <a
-                  href="tel:+237674554947"
+                  href={`tel:${CONTACT.phoneNumber.replace(/\s/g, '')}`}
                   className="text-sm hover:text-orange-500 transition-colors"
                 >
-                  +237 674 55 49 47
+                  {CONTACT.phoneNumber}
                 </a>
               </li>
               <li className="flex items-start space-x-3">
                 <MessageCircle className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
                 <a
-                  href="https://wa.me/237695538075"
+                  href={buildWhatsAppUrl(CONTACT.whatsappNumber)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm hover:text-green-500 transition-colors"
                 >
-                  +237 695 53 80 75
+                  {CONTACT.whatsappDisplay}
                 </a>
               </li>
               <li className="flex items-start space-x-3">
                 <Mail className="h-5 w-5 text-orange-500 flex-shrink-0 mt-0.5" />
                 <div className="text-sm">
                   <a
-                    href="mailto:contact@erols.com"
+                    href={`mailto:${CONTACT.email}`}
                     className="hover:text-orange-500 transition-colors block"
                   >
-                    contact@erols.com
+                    {CONTACT.email}
                   </a>
                   <a
-                    href="mailto:services_client@erols.com"
+                    href={`mailto:${CONTACT.supportEmail}`}
                     className="hover:text-orange-500 transition-colors block mt-1"
                   >
-                    services_client@erols.com
+                    {CONTACT.supportEmail}
                   </a>
                 </div>
               </li>
@@ -208,7 +202,7 @@ export function Footer() {
           <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
             <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
               <p className="text-sm text-gray-400">
-                &copy; {currentYear} EROLS EasyBuy. Tous droits réservés.
+                &copy; {currentYear} EROLS. Tous droits réservés.
               </p>
               <span className="hidden md:inline text-gray-600">|</span>
              <p className="text-sm text-gray-500">
