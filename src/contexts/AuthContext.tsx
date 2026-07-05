@@ -11,7 +11,6 @@ export interface AuthContextType {
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   googleLogin: (idToken: string) => Promise<void>;
-  facebookLogin: (accessToken: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (userData: Partial<User>) => void;
   refreshUser: () => Promise<void>;
@@ -124,24 +123,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const facebookLogin = async (accessToken: string) => {
-    try {
-      setIsLoading(true);
-      const authUser: AuthUser = await authApi.facebookLogin(accessToken);
-
-      setUser(authUser.user);
-
-      toast.success('Connexion Facebook réussie!');
-      navigate('/');
-    } catch (error) {
-      const apiError = error as ApiError;
-      toast.error(apiError.message || 'Échec de la connexion Facebook');
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const logout = async () => {
     try {
       setIsLoading(true);
@@ -200,7 +181,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     login,
     register,
     googleLogin,
-    facebookLogin,
     logout,
     updateUser,
     refreshUser,

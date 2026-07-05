@@ -146,26 +146,6 @@ export const authApi = {
     };
   },
 
-  /**
-   * Authentification via Facebook OAuth
-   */
-  facebookLogin: async (accessToken: string): Promise<AuthUser> => {
-    const response = await apiClient.post<LoginResponse>('/users/auth/facebook/', {
-      access_token: accessToken,
-    });
-    
-    const { tokens, user } = response.data;
-    
-    localStorage.setItem('auth_token', tokens.access);
-    localStorage.setItem('refresh_token', tokens.refresh);
-    localStorage.setItem('auth_user', JSON.stringify(user));
-    
-    return {
-      user: user,
-      token: tokens.access,
-    };
-  },
-
   logout: async (): Promise<void> => {
     const refreshToken = localStorage.getItem('refresh_token');
     
