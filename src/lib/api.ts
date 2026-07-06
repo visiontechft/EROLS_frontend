@@ -234,6 +234,11 @@ export const productsApi = {
     return response.data;
   },
 
+  getRelatedProducts: async (slug: string): Promise<Product[]> => {
+    const response = await apiClient.get<Product[]>(`/products/${slug}/related/`);
+    return response.data;
+  },
+
   createProduct: async (data: {
     name: string;
     description: string;
