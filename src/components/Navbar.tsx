@@ -6,6 +6,7 @@ import {
   Search,
   LogOut,
   Package,
+  LayoutGrid,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useCart } from '../contexts/CartContext';
@@ -60,6 +61,7 @@ export function Navbar() {
   const userMenuItems = [
     { path: '/profil', label: 'Mon Profil', icon: User },
     { path: '/mes-commandes', label: 'Mes Commandes', icon: Package },
+    ...(user?.is_staff ? [{ path: '/admin/produits', label: 'Gérer les produits', icon: LayoutGrid }] : []),
   ];
 
   return (
