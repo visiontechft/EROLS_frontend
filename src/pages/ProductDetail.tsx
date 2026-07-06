@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   Share2, Star, ChevronLeft, ChevronRight,
-  Truck, Shield, Package, MessageCircle, ShoppingCart, X, Clock, Check
+  Truck, Shield, Package, MessageCircle, ShoppingCart, X, Clock, Check, Hand
 } from 'lucide-react';
 import { productsApi, ordersApi } from '../lib/api';
 import { useCart } from '../contexts/CartContext';
@@ -113,7 +113,7 @@ function ProductImageZoom({ src, alt }: { src: string; alt: string }) {
         {!mobileZoom && (
           <div className="lg:hidden absolute bottom-4 left-0 right-0 text-center">
             <div className="inline-flex items-center gap-2 bg-black/70 text-white px-4 py-2 rounded-full text-xs font-bold backdrop-blur-sm">
-              👆 Touchez pour zoomer
+              <Hand size={14} /> Touchez pour zoomer
             </div>
           </div>
         )}

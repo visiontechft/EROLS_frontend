@@ -26,7 +26,7 @@ export function WhatsAppButton() {
     <>
       {/* Chat Widget */}
       {isOpen && (
-        <div className="fixed bottom-24 right-4 sm:right-6 w-80 sm:w-96 bg-white rounded-lg shadow-2xl z-50 animate-in slide-in-from-bottom-5">
+        <div className="fixed bottom-36 lg:bottom-24 right-4 sm:right-6 w-80 sm:w-96 bg-white rounded-lg shadow-2xl z-50 animate-in slide-in-from-bottom-5">
           {/* Header */}
           <div className="bg-green-500 text-white p-4 rounded-t-lg flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -103,7 +103,7 @@ export function WhatsAppButton() {
       {/* Floating Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-4 sm:right-6 w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 z-50 group"
+        className="fixed bottom-20 lg:bottom-6 right-4 sm:right-6 w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 z-50 group"
         aria-label="Contacter sur WhatsApp"
       >
         {isOpen ? (
@@ -119,7 +119,7 @@ export function WhatsAppButton() {
 
       {/* Tooltip */}
       {!isOpen && (
-        <div className="fixed bottom-6 right-20 sm:right-24 bg-gray-900 text-white text-sm px-3 py-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+        <div className="fixed bottom-20 lg:bottom-6 right-20 sm:right-24 bg-gray-900 text-white text-sm px-3 py-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
           Besoin d'aide? Chattez avec nous!
           <div className="absolute right-0 top-1/2 transform translate-x-1 -translate-y-1/2">
             <div className="w-2 h-2 bg-gray-900 rotate-45" />

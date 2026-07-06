@@ -7,6 +7,7 @@ import type {
   LoginResponse,
   RegisterResponse,
   Product,
+  ProductImage,
   Category,
   City,
   Order,
@@ -231,6 +232,45 @@ export const productsApi = {
       params: { q: query },
     });
     return response.data;
+  },
+
+  createProduct: async (data: {
+    name: string;
+    description: string;
+    category: number;
+    price: number;
+    stock: number;
+    is_available?: boolean;
+  }): Promise<Product> => {
+    const response = await apiClient.post<Product>('/products/', data);
+    return response.data;
+  },
+
+  updateProduct: async (slug: string, data: Partial<{
+    name: string;
+    description: string;
+    category: number;
+    price: number;
+    stock: number;
+    is_available: boolean;
+  }>): Promise<Product> => {
+    const response = await apiClient.patch<Product>(`/products/${slug}/`, data);
+    return response.data;
+  },
+
+  deleteProduct: async (slug: string): Promise<void> => {
+    await apiClient.delete(`/products/${slug}/`);
+  },
+
+  uploadProductImages: async (slug: string, files: File[]): Promise<ProductImage[]> => {
+    const formData = new FormData();
+    files.forEach((file) => formData.append('images', file));
+    const response = await apiClient.post<ProductImage[]>(`/products/${slug}/images/`, formData);
+    return response.data;
+  },
+
+  deleteProductImage: async (slug: string, imageId: number): Promise<void> => {
+    await apiClient.delete(`/products/${slug}/images/${imageId}/`);
   },
 };
 

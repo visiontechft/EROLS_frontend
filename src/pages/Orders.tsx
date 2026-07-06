@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, MapPin, Calendar, MessageCircle } from 'lucide-react';
+import { Package, MapPin, Calendar, MessageCircle, CheckCircle, XCircle } from 'lucide-react';
 import { ordersApi, formatDate, getOrderStatusLabel } from '../lib/api';
 import { PageLoader } from '../components/ui/LoadingSpinner';
 import { Badge } from '../components/ui/Badge';
@@ -95,7 +95,7 @@ export function Orders() {
                   <p className="text-2xl font-bold text-green-600">{stats.completed}</p>
                 </div>
                 <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                  <span className="text-green-600 text-xl">✓</span>
+                  <CheckCircle size={22} className="text-green-600" />
                 </div>
               </div>
             </div>
@@ -107,7 +107,7 @@ export function Orders() {
                   <p className="text-2xl font-bold text-red-600">{stats.cancelled}</p>
                 </div>
                 <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                  <span className="text-red-600 text-xl">✕</span>
+                  <XCircle size={22} className="text-red-600" />
                 </div>
               </div>
             </div>

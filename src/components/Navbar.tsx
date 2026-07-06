@@ -4,12 +4,8 @@ import {
   ShoppingCart,
   User,
   Search,
-  Menu,
-  X,
   LogOut,
   Package,
-  Heart,
-  Settings,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useCart } from '../contexts/CartContext';
@@ -21,7 +17,6 @@ export function Navbar() {
   const { cart } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isScrolled, setIsScrolled] = useState(false);
@@ -36,9 +31,8 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Close mobile menu on route change
+  // Close user menu on route change
   useEffect(() => {
-    setIsMenuOpen(false);
     setIsUserMenuOpen(false);
   }, [location]);
 
@@ -116,8 +110,8 @@ export function Navbar() {
             </div>
           </form>
 
-          {/* Actions */}
-          <div className="flex items-center space-x-4">
+          {/* Actions - masquées sur mobile, remplacées par MobileTabBar */}
+          <div className="hidden lg:flex items-center space-x-4">
             {/* Cart */}
             <Link
               to="/panier"
@@ -195,18 +189,6 @@ export function Navbar() {
                 </Button>
               </div>
             )}
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="lg:hidden p-2 text-gray-700 hover:text-orange-500"
-            >
-              {isMenuOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
-            </button>
           </div>
         </div>
 
@@ -227,46 +209,6 @@ export function Navbar() {
           </div>
         </form>
       </div>
-
-      {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="lg:hidden bg-white border-t border-gray-200">
-          <div className="px-4 py-4 space-y-2">
-            {navigationLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`block px-4 py-2 rounded-lg transition-colors ${
-                  location.pathname === link.path
-                    ? 'bg-orange-50 text-orange-500 font-medium'
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-
-            {!isAuthenticated && (
-              <div className="pt-4 space-y-2 border-t border-gray-200">
-                <Button
-                  variant="outline"
-                  fullWidth
-                  onClick={() => navigate('/login')}
-                >
-                  Connexion
-                </Button>
-                <Button
-                  variant="primary"
-                  fullWidth
-                  onClick={() => navigate('/inscription')}
-                >
-                  Inscription
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </nav>
   );
 }
