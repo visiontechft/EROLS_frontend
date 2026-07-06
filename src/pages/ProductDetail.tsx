@@ -11,6 +11,7 @@ import { Button } from '../components/ui/Button';
 import { Badge, StockBadge } from '../components/ui/Badge';
 import { PageLoader } from '../components/ui/LoadingSpinner';
 import { QuartierSelectModal } from '../components/QuartierSelectModal';
+import { ProductGrid } from '../components/ProductCard';
 import type { Product } from '../types';
 import { toast } from 'react-toastify';
 
@@ -175,6 +176,7 @@ export function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [showCityModal, setShowCityModal] = useState(false);
   const [submittingCityId, setSubmittingCityId] = useState<number | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -183,6 +185,10 @@ export function ProductDetail() {
         setIsLoading(true);
         const productData = await productsApi.getProduct(slug);
         setProduct(productData);
+        setSelectedImageIndex(0);
+        productsApi.getRelatedProducts(slug)
+          .then(setRelatedProducts)
+          .catch(() => setRelatedProducts([]));
       } catch (error) {
         toast.error('Erreur de chargement');
         navigate('/produits');
@@ -411,6 +417,16 @@ export function ProductDetail() {
           </div>
 
         </div>
+
+        {/* PRODUITS DE LA MÊME CATÉGORIE */}
+        {relatedProducts.length > 0 && (
+          <div className="mt-16 pt-10 border-t-2 border-gray-200">
+            <h2 className="text-2xl font-black text-gray-900 mb-6">
+              Vous aimerez aussi
+            </h2>
+            <ProductGrid products={relatedProducts} />
+          </div>
+        )}
       </div>
 
       {/* Modal de sélection de quartier */}

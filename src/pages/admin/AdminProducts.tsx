@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Plus, Save } from 'lucide-react';
+import { Plus, Save, TrendingUp } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { categoriesApi, productsApi } from '../../lib/api';
 import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
 import { PageLoader } from '../../components/ui/LoadingSpinner';
+import { ConfirmDialog } from '../../components/ui/Modal';
 import { AdminProductRow } from './AdminProductRow';
 import type { Category } from '../../types';
 
@@ -37,6 +39,12 @@ export function AdminProducts() {
   const [isLoading, setIsLoading] = useState(true);
   const [rows, setRows] = useState<DraftProductRow[]>([emptyRow()]);
   const [isSavingAll, setIsSavingAll] = useState(false);
+
+  const [priceMode, setPriceMode] = useState<'percent' | 'fixed'>('percent');
+  const [priceValue, setPriceValue] = useState('');
+  const [priceCategoryId, setPriceCategoryId] = useState('');
+  const [showPriceConfirm, setShowPriceConfirm] = useState(false);
+  const [isApplyingPrice, setIsApplyingPrice] = useState(false);
 
   useEffect(() => {
     categoriesApi.getCategories()
@@ -99,6 +107,36 @@ export function AdminProducts() {
     });
   };
 
+  const applyBulkPrice = async () => {
+    const value = Number(priceValue);
+    if (!priceValue || Number.isNaN(value)) {
+      toast.error('Entre une valeur valide');
+      return;
+    }
+    setIsApplyingPrice(true);
+    try {
+      const result = await productsApi.bulkUpdatePrices({
+        mode: priceMode,
+        value,
+        category_id: priceCategoryId ? Number(priceCategoryId) : undefined,
+      });
+      toast.success(`${result.updated} produit(s) mis à jour`);
+      setShowPriceConfirm(false);
+      setPriceValue('');
+    } catch (error: any) {
+      toast.error(error?.message || "Échec de l'ajustement des prix");
+    } finally {
+      setIsApplyingPrice(false);
+    }
+  };
+
+  const priceScopeLabel = priceCategoryId
+    ? categories.find((c) => String(c.id) === priceCategoryId)?.name || 'cette catégorie'
+    : 'tous les produits';
+  const priceChangeLabel = priceMode === 'percent'
+    ? `${Number(priceValue) >= 0 ? '+' : ''}${priceValue || 0}%`
+    : `${Number(priceValue) >= 0 ? '+' : ''}${priceValue || 0} FCFA`;
+
   if (isLoading) return <PageLoader />;
 
   return (
@@ -113,6 +151,60 @@ export function AdminProducts() {
             Tout enregistrer
           </Button>
         </div>
+
+        {/* AJUSTEMENT DES PRIX EN MASSE */}
+        <div className="bg-white border-2 border-gray-200 rounded-xl p-5 mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingUp size={20} className="text-orange-500" />
+            <h2 className="text-lg font-bold text-gray-900">Ajuster les prix en masse</h2>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Applique une marge sur les prix existants (utile après un import au prix de gros).
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+            <select
+              value={priceMode}
+              onChange={(e) => setPriceMode(e.target.value as 'percent' | 'fixed')}
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+              <option value="percent">Pourcentage (%)</option>
+              <option value="fixed">Montant fixe (FCFA)</option>
+            </select>
+            <Input
+              type="number"
+              placeholder={priceMode === 'percent' ? 'ex. 20' : 'ex. 2000'}
+              value={priceValue}
+              onChange={(e) => setPriceValue(e.target.value)}
+            />
+            <select
+              value={priceCategoryId}
+              onChange={(e) => setPriceCategoryId(e.target.value)}
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+              <option value="">Toutes les catégories</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+            <Button
+              variant="secondary"
+              onClick={() => setShowPriceConfirm(true)}
+              disabled={!priceValue}
+            >
+              Appliquer
+            </Button>
+          </div>
+        </div>
+
+        <ConfirmDialog
+          isOpen={showPriceConfirm}
+          onClose={() => setShowPriceConfirm(false)}
+          onConfirm={applyBulkPrice}
+          isLoading={isApplyingPrice}
+          title="Confirmer l'ajustement des prix"
+          message={`Cette action va modifier le prix de ${priceScopeLabel} : ${priceChangeLabel}. Cette action ne peut pas être annulée automatiquement.`}
+          confirmText="Confirmer"
+        />
 
         <div className="space-y-4">
           {rows.map((row) => (
