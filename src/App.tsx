@@ -4,6 +4,7 @@ import { CartProvider } from './contexts/CartContext';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { WhatsAppButton } from './components/WhatsAppButton';
+import { MobileTabBar } from './components/MobileTabBar';
 import { ScrollToTop } from './components/ScrollToTop'; // ⬅️ 1. Ajoutez cet import
 import { Home } from './pages/Home';
 import { Products } from './pages/Products';
@@ -20,6 +21,8 @@ import { FAQ } from './pages/FAQ';
 import { Contact } from './pages/Contact';
 import { Terms } from './pages/Terms';
 import { Privacy } from './pages/Privacy';
+import { AdminProducts } from './pages/admin/AdminProducts';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 function App() {
   return (
@@ -29,7 +32,7 @@ function App() {
         <CartProvider>
           <div className="flex flex-col min-h-screen">
             <Navbar />
-            <main className="flex-grow">
+            <main className="flex-grow pb-16 lg:pb-0">
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/produits" element={<Products />} />
@@ -46,10 +49,19 @@ function App() {
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/conditions" element={<Terms />} />
                 <Route path="/politique-confidentialite" element={<Privacy />} />
+                <Route
+                  path="/admin/produits"
+                  element={
+                    <ProtectedRoute requireStaff>
+                      <AdminProducts />
+                    </ProtectedRoute>
+                  }
+                />
               </Routes>
             </main>
             <Footer />
             <WhatsAppButton />
+            <MobileTabBar />
           </div>
         </CartProvider>
       </AuthProvider>

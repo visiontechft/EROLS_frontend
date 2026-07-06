@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { Mail, Lock, User, Phone, UserPlus, MapPin, MessageSquare } from 'lucide-react';
+import { Mail, Lock, User, Phone, UserPlus, MapPin, MessageSquare, Check } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -279,7 +279,7 @@ export function Register() {
             ].map((benefit, index) => (
               <li key={index} className="flex items-center text-sm text-gray-600">
                 <div className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                  <span className="text-green-600 text-xs">✓</span>
+                  <Check size={12} className="text-green-600" strokeWidth={3} />
                 </div>
                 {benefit}
               </li>

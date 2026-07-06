@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { Mail, Lock, LogIn } from 'lucide-react';
+import { Mail, Lock, LogIn, Lightbulb } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -147,8 +147,8 @@ export function Login() {
 
         {/* Quick Login Info */}
         <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-sm text-blue-800 text-center">
-            💡 <strong>Astuce:</strong> Utilisez votre email ou nom d'utilisateur pour vous connecter
+          <p className="text-sm text-blue-800 text-center flex items-center justify-center gap-1.5">
+            <Lightbulb size={16} /> <strong>Astuce:</strong> Utilisez votre email ou nom d'utilisateur pour vous connecter
           </p>
         </div>
       </div>

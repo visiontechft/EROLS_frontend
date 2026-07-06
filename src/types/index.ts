@@ -13,6 +13,7 @@ export interface User {
   address?: string;
   city: string;
   is_verified: boolean;
+  is_staff: boolean;
   created_at: string;
   updated_at: string;
 }

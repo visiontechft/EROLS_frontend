@@ -1,5 +1,6 @@
 import React from 'react';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import { AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
@@ -16,12 +17,9 @@ export function SocialLoginButtons({
   mode = 'login'
 }: SocialLoginButtonsProps) {
   const { googleLogin } = useAuth();
-  const [isLoading, setIsLoading] = React.useState(false);
 
   const handleGoogleSuccess = async (credentialResponse: any) => {
     try {
-      setIsLoading(true);
-
       await googleLogin(credentialResponse.credential);
 
       if (onSuccess) {
@@ -33,8 +31,6 @@ export function SocialLoginButtons({
       if (onError) {
         onError(errorMessage);
       }
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -48,8 +44,8 @@ export function SocialLoginButtons({
     if (import.meta.env.DEV) {
       return (
         <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="text-sm text-yellow-800">
-            ⚠️ Aucun provider social configuré. Vérifiez vos variables d'environnement.
+          <p className="text-sm text-yellow-800 flex items-center gap-1.5">
+            <AlertTriangle size={16} /> Aucun provider social configuré. Vérifiez vos variables d'environnement.
           </p>
         </div>
       );

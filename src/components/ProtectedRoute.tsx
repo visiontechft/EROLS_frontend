@@ -6,15 +6,17 @@ import { PageLoader } from './ui/LoadingSpinner';
 interface ProtectedRouteProps {
   children: ReactNode;
   requireAuth?: boolean;
+  requireStaff?: boolean;
   redirectTo?: string;
 }
 
 export function ProtectedRoute({
   children,
   requireAuth = true,
+  requireStaff = false,
   redirectTo = '/login',
 }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -31,6 +33,10 @@ export function ProtectedRoute({
     // Redirect them to the page they came from or home
     const from = (location.state as any)?.from?.pathname || '/';
     return <Navigate to={from} replace />;
+  }
+
+  if (requireStaff && !user?.is_staff) {
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;

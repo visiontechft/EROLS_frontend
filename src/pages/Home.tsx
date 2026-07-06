@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Shield, Truck, ShoppingCart, MessageCircle, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
+import { ArrowRight, ShoppingBag, Truck, Wallet, ShoppingCart, MessageCircle, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import { productsApi, categoriesApi, ordersApi } from '../lib/api';
 import { ProductGrid } from '../components/ProductCard';
 import { ProductImage } from '../components/ProductImage';
@@ -28,9 +28,9 @@ export function Home() {
   const [submittingCityId, setSubmittingCityId] = useState<number | null>(null);
 
   const messages = [
-    { title: "Achetez vos produits chinois", subtitle: "Disponibles à Bafoussam, à des prix imbattables", icon: "🛍️" },
-    { title: "Recevez vos produits", subtitle: "À domicile ou dans un point de retrait de votre quartier", icon: "🚚" },
-    { title: "Payez à la livraison", subtitle: "Sans inquiétude, en toute sécurité", icon: "💰" }
+    { title: "Achetez vos produits chinois", subtitle: "Disponibles à Bafoussam, à des prix imbattables", icon: ShoppingBag },
+    { title: "Recevez vos produits", subtitle: "À domicile ou dans un point de retrait de votre quartier", icon: Truck },
+    { title: "Payez à la livraison", subtitle: "Sans inquiétude, en toute sécurité", icon: Wallet }
   ];
 
   useEffect(() => {
@@ -101,12 +101,42 @@ export function Home() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="bg-gray-900 py-6 lg:py-10">
+      <section className="bg-gray-900 py-4 lg:py-10">
         <div className="max-w-[1500px] mx-auto px-4 sm:px-6">
-          <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6">
-            
+
+          {/* Mobile only: bandeau compact, pas de carrousel produit */}
+          <div className="lg:hidden relative h-[220px] rounded-2xl overflow-hidden shadow-xl">
+            <img
+              src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1200&fit=crop"
+              alt="Shopping"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent"></div>
+
+            <div className="relative h-full flex flex-col justify-center p-5 z-10 space-y-3">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center">
+                <currentMessage.icon className="text-white" size={26} />
+              </div>
+              <h1 className="text-xl font-black text-white leading-tight">
+                {currentMessage.title}
+              </h1>
+              <p className="text-sm text-white/90 font-medium">
+                {currentMessage.subtitle}
+              </p>
+              <Button
+                onClick={() => navigate('/produits')}
+                className="w-fit bg-orange-500 hover:bg-orange-600 text-white border-none h-10 px-5 rounded-full text-sm font-bold shadow-lg"
+              >
+                Découvrir <ArrowRight className="ml-1" size={16} />
+              </Button>
+            </div>
+          </div>
+
+          {/* Desktop only: hero riche avec produit vedette */}
+          <div className="hidden lg:grid lg:grid-cols-2 gap-6">
+
             {/* Left Column: Message Carousel */}
-            <div className="relative h-[350px] lg:h-[520px] rounded-2xl overflow-hidden shadow-2xl">
+            <div className="relative h-[520px] rounded-2xl overflow-hidden shadow-2xl">
               <img
                 src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1200&fit=crop"
                 alt="Shopping"
@@ -115,8 +145,8 @@ export function Home() {
               <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent"></div>
 
               <div className="relative h-full flex flex-col justify-center p-8 lg:p-14 z-10 space-y-6">
-                <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-5xl">
-                  {currentMessage.icon}
+                <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
+                  <currentMessage.icon className="text-white" size={40} />
                 </div>
                 <div className="space-y-4">
                   <h1 className="text-3xl lg:text-5xl font-black text-white leading-tight">
@@ -126,7 +156,7 @@ export function Home() {
                     {currentMessage.subtitle}
                   </p>
                 </div>
-                <Button 
+                <Button
                   onClick={() => navigate('/produits')}
                   className="w-fit bg-orange-500 hover:bg-orange-600 text-white border-none h-14 px-8 rounded-full text-lg font-bold shadow-lg"
                 >
@@ -137,7 +167,7 @@ export function Home() {
 
             {/* Right Column: Product Carousel - FIX 5: Ajouter une condition de rendu */}
             {currentProduct ? (
-              <div className="relative h-[350px] lg:h-[520px] bg-white rounded-2xl shadow-2xl overflow-hidden flex">
+              <div className="relative h-[520px] bg-white rounded-2xl shadow-2xl overflow-hidden flex">
                 {/* Product Image Side */}
                 <div className="w-1/2 bg-gray-50 flex items-center justify-center p-6 relative">
                   <ProductImage
@@ -210,7 +240,7 @@ export function Home() {
               </div>
             ) : (
               // FIX 7: Afficher un placeholder si aucun produit
-              <div className="relative h-[350px] lg:h-[520px] bg-white rounded-2xl shadow-2xl overflow-hidden flex items-center justify-center">
+              <div className="relative h-[520px] bg-white rounded-2xl shadow-2xl overflow-hidden flex items-center justify-center">
                 <div className="text-center text-gray-400">
                   <ShoppingCart size={48} className="mx-auto mb-4" />
                   <p>Chargement des produits...</p>
@@ -221,114 +251,8 @@ export function Home() {
         </div>
       </section>
 
-      {/* Roadmap Section - Comment acheter */}
-      <section className="py-16 bg-gradient-to-br from-orange-50 via-white to-orange-50">
-        <div className="max-w-7xl mx-auto px-4">
-          {/* En-tête */}
-          <div className="text-center mb-12">
-            <h2 className="text-3xl lg:text-4xl font-black text-gray-900 mb-3">
-              Comment passer votre commande ?
-            </h2>
-            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              Suivez ces étapes simples pour recevoir vos produits chinois à Bafoussam en toute sécurité
-            </p>
-          </div>
-
-          {/* Timeline */}
-          <div className="relative">
-            {/* Ligne de connexion - cachée sur mobile */}
-            <div className="hidden lg:block absolute top-24 left-0 right-0 h-1 bg-gradient-to-r from-orange-200 via-orange-400 to-orange-200 mx-auto" style={{width: 'calc(100% - 200px)', marginLeft: '100px'}}></div>
-            
-            {/* Étapes */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-6">
-              
-              {/* Étape 1 */}
-              <div className="relative flex flex-col items-center">
-                <div className="relative z-10 w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white text-2xl font-black shadow-xl mb-6 ring-4 ring-orange-100">
-                  1
-                </div>
-                <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-orange-100 hover:border-orange-300 transition-all h-full w-full">
-                  <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mb-4 mx-auto">
-                    <Eye className="text-orange-600" size={24} />
-                  </div>
-                  <h3 className="font-bold text-lg text-gray-900 mb-2 text-center">
-                    Naviguez et choisissez
-                  </h3>
-                  <p className="text-sm text-gray-600 text-center leading-relaxed">
-                    Parcourez notre catalogue et sélectionnez le(s) produit(s) qui vous intéresse(nt)
-                  </p>
-                </div>
-              </div>
-
-              {/* Étape 2 */}
-              <div className="relative flex flex-col items-center">
-                <div className="relative z-10 w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white text-2xl font-black shadow-xl mb-6 ring-4 ring-orange-100">
-                  2
-                </div>
-                <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-orange-100 hover:border-orange-300 transition-all h-full w-full">
-                  <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mb-4 mx-auto">
-                    <ShoppingCart className="text-orange-600" size={24} />
-                  </div>
-                  <h3 className="font-bold text-lg text-gray-900 mb-2 text-center">
-                    Ajoutez au panier
-                  </h3>
-                  <p className="text-sm text-gray-600 text-center leading-relaxed">
-                    Choisissez un ou plusieurs produits, personnalisez les quantités selon vos besoins
-                  </p>
-                </div>
-              </div>
-
-              {/* Étape 3 */}
-              <div className="relative flex flex-col items-center">
-                <div className="relative z-10 w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white text-2xl font-black shadow-xl mb-6 ring-4 ring-orange-100">
-                  3
-                </div>
-                <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-orange-100 hover:border-orange-300 transition-all h-full w-full">
-                  <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mb-4 mx-auto">
-                    <MessageCircle className="text-orange-600" size={24} />
-                  </div>
-                  <h3 className="font-bold text-lg text-gray-900 mb-2 text-center">
-                    Commandez via WhatsApp
-                  </h3>
-                  <p className="text-sm text-gray-600 text-center leading-relaxed">
-                    Cliquez sur "Commander" et sélectionnez votre ville pour finaliser sur WhatsApp
-                  </p>
-                </div>
-              </div>
-
-              {/* Étape 4 */}
-              <div className="relative flex flex-col items-center">
-                <div className="relative z-10 w-20 h-20 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center text-white text-2xl font-black shadow-xl mb-6 ring-4 ring-green-100">
-                  4
-                </div>
-                <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-green-100 hover:border-green-300 transition-all h-full w-full">
-                  <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-4 mx-auto">
-                    <Truck className="text-green-600" size={24} />
-                  </div>
-                  <h3 className="font-bold text-lg text-gray-900 mb-2 text-center">
-                    Recevez et payez
-                  </h3>
-                  <p className="text-sm text-gray-600 text-center leading-relaxed">
-                    Paiement à la livraison à domicile ou dans un point de retrait de votre choix
-                  </p>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-          {/* CTA Final */}
-          <div className="mt-12 text-center">
-            <div className="inline-flex items-center gap-2 bg-white px-6 py-3 rounded-full shadow-lg border-2 border-orange-200">
-              <Shield className="text-green-600" size={20} />
-              <span className="font-bold text-gray-900">Paiement 100% sécurisé à la livraison</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Product Grid Section */}
-      <section className="py-16 max-w-7xl mx-auto px-4">
+      <section className="py-8 lg:py-16 max-w-7xl mx-auto px-4">
         <div className="flex justify-between items-end mb-10">
           <div>
             <h2 className="text-3xl font-black text-gray-900">Nos nouveaux arrivages</h2>

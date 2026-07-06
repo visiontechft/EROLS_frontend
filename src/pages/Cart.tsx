@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, MessageCircle, Clock } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, MessageCircle, Clock, AlertTriangle, Check } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { ordersApi } from '../lib/api';
 import { useCities } from '../hooks/useCities';
@@ -205,8 +205,8 @@ export function Cart() {
 
                       {/* Stock Warning */}
                       {item.quantity >= (item.product.stock || 0) && (
-                        <p className="text-sm text-orange-600 mt-2 font-bold">
-                          ⚠️ Stock maximum atteint
+                        <p className="text-sm text-orange-600 mt-2 font-bold flex items-center gap-1">
+                          <AlertTriangle size={14} /> Stock maximum atteint
                         </p>
                       )}
 
@@ -280,7 +280,7 @@ export function Cart() {
               <div className="mt-6 pt-6 border-t-2 border-gray-200 space-y-3">
                 <div className="flex items-center gap-3 text-sm text-gray-700">
                   <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-green-600 font-bold">✓</span>
+                    <Check size={16} className="text-green-600" strokeWidth={3} />
                   </div>
                   <span className="font-bold">Paiement 100% sécurisé</span>
                 </div>
