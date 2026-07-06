@@ -239,6 +239,15 @@ export const productsApi = {
     return response.data;
   },
 
+  bulkUpdatePrices: async (data: {
+    mode: 'percent' | 'fixed';
+    value: number;
+    category_id?: number;
+  }): Promise<{ updated: number }> => {
+    const response = await apiClient.post<{ updated: number }>('/products/bulk-price-update/', data);
+    return response.data;
+  },
+
   createProduct: async (data: {
     name: string;
     description: string;
