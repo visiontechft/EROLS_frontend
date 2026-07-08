@@ -19,6 +19,7 @@ import type {
   ProductFilters,
   ApiError,
   ChangePasswordData,
+  Brand,
 } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL ;
@@ -236,6 +237,26 @@ export const productsApi = {
 
   getRelatedProducts: async (slug: string): Promise<Product[]> => {
     const response = await apiClient.get<Product[]>(`/products/${slug}/related/`);
+    return response.data;
+  },
+
+  getFeatured: async (): Promise<Product[]> => {
+    const response = await apiClient.get<Product[]>('/products/featured/');
+    return response.data;
+  },
+
+  getPopular: async (): Promise<Product[]> => {
+    const response = await apiClient.get<Product[]>('/products/popular/');
+    return response.data;
+  },
+
+  getFeaturedPerCategory: async (): Promise<Product[]> => {
+    const response = await apiClient.get<Product[]>('/products/featured-per-category/');
+    return response.data;
+  },
+
+  getBrands: async (): Promise<Brand[]> => {
+    const response = await apiClient.get<Brand[]>('/products/brands/');
     return response.data;
   },
 
