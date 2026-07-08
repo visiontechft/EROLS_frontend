@@ -83,6 +83,12 @@ export interface Category {
   product_count: number;
 }
 
+export interface Brand {
+  name: string;
+  product_count: number;
+  image_url: string | null;
+}
+
 // ========== Cart Types ==========
 export interface CartItem {
   product: Product;
