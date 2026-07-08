@@ -18,7 +18,7 @@ export const HowItWorks = () => {
 
       {/* Roadmap Section */}
       <section className="py-16 lg:py-24 bg-gradient-to-br from-orange-50 via-white to-orange-50">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-8xl mx-auto px-4">
           
           {/* Timeline */}
           <div className="relative">
@@ -115,7 +115,7 @@ export const HowItWorks = () => {
 
       {/* Avantages Section */}
       <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-8xl mx-auto px-4">
           <h2 className="text-3xl lg:text-4xl font-black text-gray-900 text-center mb-12">
             Pourquoi nous choisir ?
           </h2>

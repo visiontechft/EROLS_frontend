@@ -252,7 +252,7 @@ export function Home() {
       </section>
 
       {/* Product Grid Section */}
-      <section className="py-8 lg:py-16 max-w-7xl mx-auto px-4">
+      <section className="py-8 lg:py-16 max-w-8xl mx-auto px-4">
         <div className="flex justify-between items-end mb-10">
           <div>
             <h2 className="text-3xl font-black text-gray-900">Nos nouveaux arrivages</h2>
