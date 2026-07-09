@@ -268,6 +268,8 @@ export const productsApi = {
     mode: 'percent' | 'fixed';
     value: number;
     category_id?: number;
+    min_price?: number;
+    max_price?: number;
   }): Promise<{ updated: number }> => {
     const response = await apiClient.post<{ updated: number }>('/products/bulk-price-update/', data);
     return response.data;
