@@ -85,6 +85,7 @@ export function PopularProducts({ products }: PopularProductsProps) {
                   <div className="relative aspect-square bg-gray-50">
                     <ProductImage
                       src={product.image_url}
+                      webpSrc={product.image_url_webp}
                       alt={product.name}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />

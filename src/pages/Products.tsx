@@ -1,20 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Filter, X } from 'lucide-react';
-import { productsApi, categoriesApi } from '../lib/api';
 import { ProductGrid } from '../components/ProductCard';
 import { Button } from '../components/ui/Button';
-import { PageLoader } from '../components/ui/LoadingSpinner';
-import type { Product, Category, ProductFilters, PaginatedResponse } from '../types';
-import { toast } from 'react-toastify';
+import { useProducts } from '../hooks/queries/useProducts';
+import { useCategories, usePrefetchCategoryProducts } from '../hooks/queries/useCategories';
+import type { ProductFilters } from '../types';
 
 export function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
-  const [pagination, setPagination] = useState<PaginatedResponse<Product> | null>(null);
 
   // Filter states
   const [filters, setFilters] = useState<ProductFilters>({
@@ -27,66 +22,28 @@ export function Products() {
     page_size: 12,
   });
 
-  // Fetch categories
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const data = await categoriesApi.getCategories();
-        setCategories(data);
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-        toast.error('Erreur lors du chargement des catégories');
-      }
-    };
-
-    fetchCategories();
-  }, []);
-
-  // Fetch products
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setIsLoading(true);
-        const response = await productsApi.getProducts(filters);
-        
-        // Extract products from paginated response
-        setProducts(response.results || []);
-        setPagination(response);
-      } catch (error: any) {
-        console.error('Error fetching products:', error);
-        toast.error('Erreur lors du chargement des produits');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, [filters]);
-
-  // Update URL params when filters change
-  useEffect(() => {
-    const params = new URLSearchParams();
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        params.set(key, String(value));
-      }
-    });
-    setSearchParams(params);
-  }, [filters, setSearchParams]);
+  const { data: categories = [] } = useCategories();
+  const prefetchCategory = usePrefetchCategoryProducts();
+  const { data: pagination, isLoading } = useProducts(filters);
+  const products = pagination?.results || [];
 
   const updateFilter = (key: keyof ProductFilters, value: any) => {
-    setFilters((prev) => ({
-      ...prev,
+    const next = {
+      ...filters,
       [key]: value,
       page: key !== 'page' ? 1 : value, // Reset to page 1 when changing filters
-    }));
+    };
+    setFilters(next);
+
+    const params = new URLSearchParams();
+    Object.entries(next).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') params.set(k, String(v));
+    });
+    setSearchParams(params);
   };
 
   const clearFilters = () => {
-    setFilters({
-      page: 1,
-      page_size: 12,
-    });
+    setFilters({ page: 1, page_size: 12 });
     setSearchParams({});
   };
 
@@ -174,7 +131,11 @@ export function Products() {
                     </span>
                   </label>
                   {categories.map((category) => (
-                    <label key={category.id} className="flex items-center cursor-pointer">
+                    <label
+                      key={category.id}
+                      className="flex items-center cursor-pointer"
+                      onMouseEnter={() => prefetchCategory(category.slug)}
+                    >
                       <input
                         type="radio"
                         name="category"
@@ -263,7 +224,7 @@ export function Products() {
             </div>
 
             {isLoading ? (
-              <PageLoader />
+              <ProductGrid isLoading />
             ) : products.length === 0 ? (
               <div className="bg-white rounded-lg shadow-md p-12 text-center">
                 <p className="text-gray-500 text-lg">Aucun produit trouvé</p>
@@ -295,7 +256,7 @@ export function Products() {
                     <div className="flex items-center gap-2">
                       {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                         let page = i + 1;
-                        
+
                         // Show pages around current page
                         if (totalPages > 5) {
                           if (currentPage <= 3) {
@@ -306,7 +267,7 @@ export function Products() {
                             page = currentPage - 2 + i;
                           }
                         }
-                        
+
                         return (
                           <button
                             key={page}

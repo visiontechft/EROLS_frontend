@@ -110,6 +110,7 @@ export function HeroSection({ products }: HeroSectionProps) {
                   <div className="flex-1 flex items-center justify-center p-10 bg-white/5">
                     <ProductImage
                       src={current.image_url}
+                      webpSrc={current.image_url_webp}
                       alt={current.name}
                       className="max-h-full max-w-full object-contain drop-shadow-2xl"
                     />

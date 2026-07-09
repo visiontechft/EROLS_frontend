@@ -5,6 +5,7 @@ import { Button } from './ui/Button';
 import { Badge, StockBadge } from './ui/Badge';
 import { ProductImage } from './ProductImage';
 import { useCart } from '../contexts/CartContext';
+import { usePrefetchProduct } from '../hooks/queries/useProduct';
 import type { Product } from '../types';
 
 interface ProductCardProps {
@@ -13,12 +14,13 @@ interface ProductCardProps {
   onQuickView?: (product: Product) => void;
 }
 
-export function ProductCard({
+export const ProductCard = React.memo(function ProductCard({
   product,
   showQuickView = false,
   onQuickView,
 }: ProductCardProps) {
   const { addToCart, isInCart } = useCart();
+  const prefetchProduct = usePrefetchProduct();
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -35,12 +37,14 @@ export function ProductCard({
   return (
     <Link
       to={`/produits/${product.slug}`}
+      onMouseEnter={() => prefetchProduct(product.slug)}
       className="group bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col"
     >
       {/* Image Container */}
       <div className="relative aspect-square overflow-hidden bg-gray-100">
         <ProductImage
           src={product.image_url}
+          webpSrc={product.image_url_webp}
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
         />
@@ -131,7 +135,7 @@ export function ProductCard({
       </div>
     </Link>
   );
-}
+});
 
 // Product Grid Component
 interface ProductGridProps {

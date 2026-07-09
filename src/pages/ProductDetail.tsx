@@ -4,15 +4,15 @@ import {
   Share2, Star, ChevronLeft, ChevronRight,
   Truck, Shield, Package, MessageCircle, ShoppingCart, X, Clock, Check, Hand
 } from 'lucide-react';
-import { productsApi, ordersApi } from '../lib/api';
+import { ordersApi } from '../lib/api';
 import { useCart } from '../contexts/CartContext';
 import { useCities } from '../hooks/useCities';
+import { useProduct, useRelatedProducts } from '../hooks/queries/useProduct';
 import { Button } from '../components/ui/Button';
 import { Badge, StockBadge } from '../components/ui/Badge';
 import { PageLoader } from '../components/ui/LoadingSpinner';
 import { QuartierSelectModal } from '../components/QuartierSelectModal';
 import { ProductGrid } from '../components/ProductCard';
-import type { Product } from '../types';
 import { toast } from 'react-toastify';
 
 // --- COMPOSANT DE ZOOM HAUTE PRÉCISION (Desktop + Mobile) ---
@@ -169,35 +169,25 @@ export function ProductDetail() {
   const navigate = useNavigate();
   const { addToCart } = useCart();
 
-  const [product, setProduct] = useState<Product | null>(null);
   const { cities } = useCities();
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [showCityModal, setShowCityModal] = useState(false);
   const [submittingCityId, setSubmittingCityId] = useState<number | null>(null);
-  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+
+  const { data: product, isLoading, isError } = useProduct(slug);
+  const { data: relatedProducts = [] } = useRelatedProducts(slug);
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!slug) return;
-      try {
-        setIsLoading(true);
-        const productData = await productsApi.getProduct(slug);
-        setProduct(productData);
-        setSelectedImageIndex(0);
-        productsApi.getRelatedProducts(slug)
-          .then(setRelatedProducts)
-          .catch(() => setRelatedProducts([]));
-      } catch (error) {
-        toast.error('Erreur de chargement');
-        navigate('/produits');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchData();
-  }, [slug, navigate]);
+    setSelectedImageIndex(0);
+  }, [slug]);
+
+  useEffect(() => {
+    if (isError) {
+      toast.error('Erreur de chargement');
+      navigate('/produits');
+    }
+  }, [isError, navigate]);
 
   const handleOrderNow = () => {
     if (!localStorage.getItem('auth_token')) {

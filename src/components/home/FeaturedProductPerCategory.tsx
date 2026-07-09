@@ -45,6 +45,7 @@ export function FeaturedProductPerCategory({ products }: FeaturedProductPerCateg
             <div className="w-full lg:w-2/5 aspect-square lg:aspect-[4/3] bg-gray-50 rounded-2xl overflow-hidden flex items-center justify-center">
               <ProductImage
                 src={product.image_url}
+                webpSrc={product.image_url_webp}
                 alt={product.name}
                 className="w-full h-full object-contain p-8"
               />

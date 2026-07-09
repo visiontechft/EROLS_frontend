@@ -1,9 +1,8 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
-import { productsApi, categoriesApi } from '../lib/api';
+import { lazy, Suspense, useEffect } from 'react';
 import { HeroSection } from '../components/home/HeroSection';
 import { SearchSection } from '../components/home/SearchSection';
-import { PageLoader } from '../components/ui/LoadingSpinner';
-import type { Product, Category, Brand } from '../types';
+import { HomeSkeleton } from '../components/home/HomeSkeleton';
+import { useHomepageData } from '../hooks/queries/useHomepageData';
 import { toast } from 'react-toastify';
 
 const FeaturedCategories = lazy(() =>
@@ -30,40 +29,17 @@ const WhatsAppCommunity = lazy(() =>
   import('../components/home/WhatsAppCommunity').then((m) => ({ default: m.WhatsAppCommunity }))
 );
 
-interface HomeData {
-  featured: Product[];
-  popular: Product[];
-  featuredPerCategory: Product[];
-  categories: Category[];
-  brands: Brand[];
-}
-
 export function Home() {
-  const [data, setData] = useState<HomeData | null>(null);
+  const { data, isLoading, isError } = useHomepageData();
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [featured, popular, featuredPerCategory, categories, brands] = await Promise.all([
-          productsApi.getFeatured(),
-          productsApi.getPopular(),
-          productsApi.getFeaturedPerCategory(),
-          categoriesApi.getCategories(),
-          productsApi.getBrands(),
-        ]);
-        setData({ featured, popular, featuredPerCategory, categories, brands });
-      } catch (error) {
-        console.error('Error loading home data:', error);
-        toast.error('Erreur de chargement');
-      }
-    };
-    fetchData();
-  }, []);
+    if (isError) toast.error('Erreur de chargement');
+  }, [isError]);
 
-  if (!data) return <PageLoader />;
+  if (isLoading || isError || !data) return <HomeSkeleton />;
 
   const categoryImages: Record<number, string | null> = {};
-  data.featuredPerCategory.forEach((product) => {
+  data.featured_per_category.forEach((product) => {
     if (product.category) categoryImages[product.category.id] = product.image_url;
   });
 
@@ -75,7 +51,7 @@ export function Home() {
       <Suspense fallback={null}>
         <FeaturedCategories categories={data.categories} categoryImages={categoryImages} />
         <PopularProducts products={data.popular.length > 0 ? data.popular : data.featured} />
-        <FeaturedProductPerCategory products={data.featuredPerCategory} />
+        <FeaturedProductPerCategory products={data.featured_per_category} />
         <DealsSection products={[...data.featured, ...data.popular]} />
         <BenefitsSection />
         <BrandSlider brands={data.brands} />

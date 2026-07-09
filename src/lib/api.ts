@@ -20,6 +20,7 @@ import type {
   ApiError,
   ChangePasswordData,
   Brand,
+  HomepageData,
 } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL ;
@@ -252,6 +253,11 @@ export const productsApi = {
 
   getFeaturedPerCategory: async (): Promise<Product[]> => {
     const response = await apiClient.get<Product[]>('/products/featured-per-category/');
+    return response.data;
+  },
+
+  getHomepageData: async (): Promise<HomepageData> => {
+    const response = await apiClient.get<HomepageData>('/products/homepage/');
     return response.data;
   },
 
