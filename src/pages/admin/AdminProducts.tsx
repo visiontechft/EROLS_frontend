@@ -43,8 +43,27 @@ export function AdminProducts() {
   const [priceMode, setPriceMode] = useState<'percent' | 'fixed'>('percent');
   const [priceValue, setPriceValue] = useState('');
   const [priceCategoryId, setPriceCategoryId] = useState('');
+  const [priceMinPrice, setPriceMinPrice] = useState('');
+  const [priceMaxPrice, setPriceMaxPrice] = useState('');
   const [showPriceConfirm, setShowPriceConfirm] = useState(false);
   const [isApplyingPrice, setIsApplyingPrice] = useState(false);
+
+  // Barème de revente confirmé : bonus fixe par palier de prix.
+  const PRICE_TIERS = [
+    { label: '200 – 499 F', min: 0, max: 499, bonus: 300 },
+    { label: '500 – 1 499 F', min: 500, max: 1499, bonus: 500 },
+    { label: '1 500 – 3 999 F', min: 1500, max: 3999, bonus: 1000 },
+    { label: '4 000 – 19 999 F', min: 4000, max: 19999, bonus: 2000 },
+    { label: '20 000 – 49 999 F', min: 20000, max: 49999, bonus: 3000 },
+    { label: '50 000 F et plus', min: 50000, max: undefined, bonus: 5000 },
+  ] as const;
+
+  const applyPreset = (tier: (typeof PRICE_TIERS)[number]) => {
+    setPriceMode('fixed');
+    setPriceValue(String(tier.bonus));
+    setPriceMinPrice(String(tier.min));
+    setPriceMaxPrice(tier.max !== undefined ? String(tier.max) : '');
+  };
 
   useEffect(() => {
     categoriesApi.getCategories()
@@ -119,10 +138,14 @@ export function AdminProducts() {
         mode: priceMode,
         value,
         category_id: priceCategoryId ? Number(priceCategoryId) : undefined,
+        min_price: priceMinPrice ? Number(priceMinPrice) : undefined,
+        max_price: priceMaxPrice ? Number(priceMaxPrice) : undefined,
       });
       toast.success(`${result.updated} produit(s) mis à jour`);
       setShowPriceConfirm(false);
       setPriceValue('');
+      setPriceMinPrice('');
+      setPriceMaxPrice('');
     } catch (error: any) {
       toast.error(error?.message || "Échec de l'ajustement des prix");
     } finally {
@@ -130,9 +153,18 @@ export function AdminProducts() {
     }
   };
 
-  const priceScopeLabel = priceCategoryId
-    ? categories.find((c) => String(c.id) === priceCategoryId)?.name || 'cette catégorie'
-    : 'tous les produits';
+  const priceRangeLabel =
+    priceMinPrice && priceMaxPrice
+      ? ` entre ${priceMinPrice} et ${priceMaxPrice} FCFA`
+      : priceMinPrice
+      ? ` à partir de ${priceMinPrice} FCFA`
+      : priceMaxPrice
+      ? ` jusqu'à ${priceMaxPrice} FCFA`
+      : '';
+  const priceScopeLabel =
+    (priceCategoryId
+      ? categories.find((c) => String(c.id) === priceCategoryId)?.name || 'cette catégorie'
+      : 'tous les produits') + priceRangeLabel;
   const priceChangeLabel = priceMode === 'percent'
     ? `${Number(priceValue) >= 0 ? '+' : ''}${priceValue || 0}%`
     : `${Number(priceValue) >= 0 ? '+' : ''}${priceValue || 0} FCFA`;
@@ -161,11 +193,30 @@ export function AdminProducts() {
           <p className="text-sm text-gray-600 mb-4">
             Applique une marge sur les prix existants (utile après un import au prix de gros).
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+
+          {/* Barème confirmé : un clic pré-remplit le palier, "Appliquer" reste à cliquer */}
+          <div className="mb-4">
+            <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">
+              Barèmes rapides
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {PRICE_TIERS.map((tier) => (
+                <button
+                  key={tier.label}
+                  onClick={() => applyPreset(tier)}
+                  className="rounded-full border border-gray-300 bg-gray-50 px-3 py-1.5 text-xs font-bold text-gray-700 hover:border-orange-400 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                >
+                  {tier.label} → +{tier.bonus.toLocaleString('fr-FR')} F
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-6 gap-3">
             <select
               value={priceMode}
               onChange={(e) => setPriceMode(e.target.value as 'percent' | 'fixed')}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="col-span-2 sm:col-span-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
             >
               <option value="percent">Pourcentage (%)</option>
               <option value="fixed">Montant fixe (FCFA)</option>
@@ -176,10 +227,22 @@ export function AdminProducts() {
               value={priceValue}
               onChange={(e) => setPriceValue(e.target.value)}
             />
+            <Input
+              type="number"
+              placeholder="Prix min"
+              value={priceMinPrice}
+              onChange={(e) => setPriceMinPrice(e.target.value)}
+            />
+            <Input
+              type="number"
+              placeholder="Prix max"
+              value={priceMaxPrice}
+              onChange={(e) => setPriceMaxPrice(e.target.value)}
+            />
             <select
               value={priceCategoryId}
               onChange={(e) => setPriceCategoryId(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="col-span-2 sm:col-span-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
             >
               <option value="">Toutes les catégories</option>
               {categories.map((c) => (
