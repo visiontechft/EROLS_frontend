@@ -1,6 +1,8 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { HeroSection } from '../components/home/HeroSection';
 import { SearchSection } from '../components/home/SearchSection';
+import { MobileCategoryIcons } from '../components/home/MobileCategoryIcons';
+import { MobilePromoBanner } from '../components/home/MobilePromoBanner';
 import { HomeSkeleton } from '../components/home/HomeSkeleton';
 import { useHomepageData } from '../hooks/queries/useHomepageData';
 import { toast } from 'react-toastify';
@@ -47,12 +49,14 @@ export function Home() {
     <div className="min-h-screen bg-white">
       <HeroSection products={data.featured} />
       <SearchSection />
+      <MobileCategoryIcons categories={data.categories} />
+      <MobilePromoBanner />
 
       <Suspense fallback={null}>
+        <DealsSection products={[...data.featured, ...data.popular]} />
         <FeaturedCategories categories={data.categories} categoryImages={categoryImages} />
         <PopularProducts products={data.popular.length > 0 ? data.popular : data.featured} />
         <FeaturedProductPerCategory products={data.featured_per_category} />
-        <DealsSection products={[...data.featured, ...data.popular]} />
         <BenefitsSection />
         <BrandSlider brands={data.brands} />
         <WhatsAppCommunity />

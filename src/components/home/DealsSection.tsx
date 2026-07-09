@@ -26,15 +26,53 @@ export function DealsSection({ products }: DealsSectionProps) {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.5 }}
-          className="flex items-center gap-3 mb-10"
+          className="flex items-center justify-between gap-3 mb-6 lg:mb-10"
         >
-          <div className="h-11 w-11 rounded-full bg-orange-500/20 flex items-center justify-center">
-            <Percent className="h-5 w-5 text-orange-400" />
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 lg:h-11 lg:w-11 rounded-full bg-orange-500/20 flex items-center justify-center">
+              <Percent className="h-4 w-4 lg:h-5 lg:w-5 text-orange-400" />
+            </div>
+            <h2 className="text-xl lg:text-4xl font-black text-white">Offres du moment</h2>
           </div>
-          <h2 className="text-3xl lg:text-4xl font-black text-white">Offres spéciales</h2>
+          <Link
+            to="/produits"
+            className="lg:hidden text-xs font-bold text-orange-400 whitespace-nowrap"
+          >
+            Voir tout
+          </Link>
         </motion.div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
+        {/* Mobile: horizontal scroll, matching the "Offres du moment" reference layout */}
+        <div className="lg:hidden -mx-4 px-4">
+          <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide">
+            {deals.slice(0, 8).map((product, i) => (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ duration: 0.4, delay: i * 0.05 }}
+                className="snap-start shrink-0 w-[150px]"
+              >
+                <Link to={`/produits/${product.slug}`} className="group block">
+                  <div className="aspect-square rounded-2xl overflow-hidden bg-white">
+                    <ProductImage
+                      src={product.image_url}
+                      alt={product.name}
+                      className="w-full h-full object-cover transition-transform duration-300 group-active:scale-95"
+                    />
+                  </div>
+                  <p className="mt-2 text-xs font-semibold text-white line-clamp-1">{product.name}</p>
+                  <p className="text-sm font-black text-orange-400">{formatPrice(product.price)} FCFA</p>
+                  <p className="text-xs text-gray-400 line-through">{formatPrice(product.original_price!)} FCFA</p>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        {/* Desktop: original grid with discount badge */}
+        <div className="hidden lg:grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
           {deals.slice(0, 8).map((product, i) => {
             const originalPrice = toNumber(product.original_price!);
             const percent = Math.round(((originalPrice - toNumber(product.price)) / originalPrice) * 100);
@@ -79,7 +117,7 @@ export function DealsSection({ products }: DealsSectionProps) {
           })}
         </div>
 
-        <div className="text-center mt-10">
+        <div className="hidden lg:block text-center mt-10">
           <Link
             to="/produits"
             className="inline-flex items-center gap-2 text-sm font-bold text-white hover:text-orange-400 transition-colors"
