@@ -1,8 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Star, Eye, Package } from 'lucide-react';
-import { Button } from './ui/Button';
-import { Badge, StockBadge } from './ui/Badge';
+import { Star, Eye, Package, Plus, Check, Tag, Flame, Sparkles } from 'lucide-react';
+import { StockBadge } from './ui/Badge';
 import { ProductImage } from './ProductImage';
 import { useCart } from '../contexts/CartContext';
 import { usePrefetchProduct } from '../hooks/queries/useProduct';
@@ -13,6 +12,8 @@ interface ProductCardProps {
   showQuickView?: boolean;
   onQuickView?: (product: Product) => void;
 }
+
+const NEW_THRESHOLD_DAYS = 14;
 
 export const ProductCard = React.memo(function ProductCard({
   product,
@@ -32,39 +33,66 @@ export const ProductCard = React.memo(function ProductCard({
     onQuickView?.(product);
   };
 
-  const hasDiscount = product.original_price && product.original_price > product.price;
+  // DRF serializes DecimalField as a JSON string (e.g. "3000.00"), so price/original_price
+  // can arrive as strings at runtime despite the TS type — coerce before comparing/formatting.
+  const toNumber = (value: number | string) => (typeof value === 'string' ? parseFloat(value) : value);
+  const price = toNumber(product.price);
+  const originalPrice = product.original_price ? toNumber(product.original_price) : undefined;
+  const hasDiscount = originalPrice !== undefined && originalPrice > price;
+  const isNew =
+    !!product.created_at &&
+    (Date.now() - new Date(product.created_at).getTime()) / 86_400_000 <= NEW_THRESHOLD_DAYS;
+  const isOutOfStock = !product.is_available || product.stock === 0;
+  const inCart = isInCart(product.id);
 
   return (
     <Link
       to={`/produits/${product.slug}`}
       onMouseEnter={() => prefetchProduct(product.slug)}
-      className="group bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col"
+      className="group bg-white rounded-2xl shadow-md hover:shadow-xl hover:-translate-y-1 active:scale-[0.98] transition-all duration-300 overflow-hidden flex flex-col"
     >
-      {/* Image Container */}
+      {/* Image Container — uniform 1:1 ratio so every card lines up */}
       <div className="relative aspect-square overflow-hidden bg-gray-100">
         <ProductImage
           src={product.image_url}
           webpSrc={product.image_url_webp}
           alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+          className="w-full h-full object-cover group-hover:scale-110 group-active:scale-105 transition-transform duration-300"
         />
 
         {/* Badges */}
-        <div className="absolute top-2 left-2 flex flex-col gap-2">
-          {!product.is_available && (
-            <Badge variant="danger">Indisponible</Badge>
-          )}
-          {product.is_featured && (
-            <Badge variant="primary">Vedette</Badge>
-          )}
-          {hasDiscount && (
-            <Badge variant="success">-{product.discount_percentage}%</Badge>
+        <div className="absolute top-2.5 left-2.5 flex flex-col items-start gap-1.5">
+          {isOutOfStock ? (
+            <span className="inline-flex items-center rounded-full bg-gray-900/85 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm">
+              Indisponible
+            </span>
+          ) : (
+            <>
+              {hasDiscount && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-red-500 to-orange-500 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm">
+                  <Tag className="h-3 w-3" />
+                  -{product.discount_percentage}%
+                </span>
+              )}
+              {product.is_featured && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-amber-600 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm">
+                  <Flame className="h-3 w-3" />
+                  Best-seller
+                </span>
+              )}
+              {!product.is_featured && isNew && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm">
+                  <Sparkles className="h-3 w-3" />
+                  Nouveau
+                </span>
+              )}
+            </>
           )}
         </div>
 
-        {/* Quick Actions */}
-        <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          {showQuickView && onQuickView && (
+        {/* Quick view (desktop hover) */}
+        {showQuickView && onQuickView && (
+          <div className="absolute top-2.5 right-2.5 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={handleQuickView}
               className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition-colors"
@@ -72,32 +100,48 @@ export const ProductCard = React.memo(function ProductCard({
             >
               <Eye className="h-5 w-5 text-gray-700" />
             </button>
-          )}
-        </div>
+          </div>
+        )}
 
-        {/* Stock Badge */}
-        <div className="absolute bottom-2 left-2">
-          <StockBadge stock={product.stock} />
-        </div>
+        {/* Stock warning — only surfaced when it actually matters */}
+        {!isOutOfStock && product.stock <= 5 && (
+          <div className="absolute bottom-2.5 left-2.5">
+            <StockBadge stock={product.stock} />
+          </div>
+        )}
+
+        {/* Floating add-to-cart button */}
+        <button
+          onClick={handleAddToCart}
+          disabled={isOutOfStock}
+          aria-label={inCart ? 'Ajouté au panier' : 'Ajouter au panier'}
+          className={`absolute bottom-2.5 right-2.5 h-10 w-10 flex items-center justify-center rounded-full shadow-lg ring-2 ring-white transition-all active:scale-90 disabled:opacity-40 disabled:cursor-not-allowed ${
+            inCart
+              ? 'bg-green-500 text-white'
+              : 'bg-orange-500 text-white hover:bg-orange-600'
+          }`}
+        >
+          {inCart ? <Check className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
+        </button>
       </div>
 
       {/* Content */}
-      <div className="p-4 flex flex-col flex-grow">
+      <div className="p-3 flex flex-col flex-grow">
         {/* Category */}
-        <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+        <p className="text-[11px] text-gray-500 uppercase tracking-wide mb-1">
           {product.category?.name || 'Sans catégorie'}
         </p>
 
         {/* Product Name */}
-        <h3 className="text-base font-semibold text-gray-900 mb-2 line-clamp-2 flex-grow">
+        <h3 className="text-sm font-semibold text-gray-900 mb-1.5 line-clamp-2 flex-grow">
           {product.name}
         </h3>
 
         {/* Rating */}
         {product.rating && (
-          <div className="flex items-center gap-1 mb-2">
-            <Star className="h-4 w-4 text-yellow-400 fill-current" />
-            <span className="text-sm font-medium text-gray-700">
+          <div className="flex items-center gap-1 mb-1.5">
+            <Star className="h-3.5 w-3.5 text-yellow-400 fill-current" />
+            <span className="text-xs font-medium text-gray-700">
               {product.rating.toFixed(1)}
             </span>
             {product.review_count && (
@@ -108,29 +152,16 @@ export const ProductCard = React.memo(function ProductCard({
           </div>
         )}
 
-        {/* Price and Action */}
-        <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100">
-          <div className="flex flex-col">
-            {hasDiscount && (
-              <span className="text-xs text-gray-400 line-through">
-                {(product.original_price || 0).toLocaleString('fr-FR')} FCFA
-              </span>
-            )}
-            <span className="text-lg font-bold text-orange-500">
-              {(product.price || 0).toLocaleString('fr-FR')} FCFA
+        {/* Price */}
+        <div className="mt-auto pt-2 border-t border-gray-100">
+          {hasDiscount && (
+            <span className="block text-xs text-gray-400 line-through tabular-nums">
+              {originalPrice!.toLocaleString('fr-FR')} FCFA
             </span>
-          </div>
-
-          <Button
-            size="sm"
-            onClick={handleAddToCart}
-            disabled={!product.is_available || product.stock === 0}
-            variant={isInCart(product.id) ? 'secondary' : 'primary'}
-            leftIcon={<ShoppingCart className="h-4 w-4" />}
-            className="whitespace-nowrap"
-          >
-            {isInCart(product.id) ? 'Ajouté' : 'Ajouter'}
-          </Button>
+          )}
+          <span className="block text-xl font-black text-orange-500 tabular-nums">
+            {price.toLocaleString('fr-FR')} FCFA
+          </span>
         </div>
       </div>
     </Link>
@@ -157,13 +188,13 @@ export function ProductGrid({
         {Array.from({ length: 8 }).map((_, i) => (
           <div
             key={i}
-            className="bg-white rounded-lg shadow-md overflow-hidden animate-pulse"
+            className="bg-white rounded-2xl shadow-md overflow-hidden animate-pulse"
           >
             <div className="aspect-square bg-gray-200" />
-            <div className="p-4 space-y-3">
+            <div className="p-3 space-y-3">
               <div className="h-4 bg-gray-200 rounded w-3/4" />
               <div className="h-4 bg-gray-200 rounded w-1/2" />
-              <div className="h-9 bg-gray-200 rounded w-full" />
+              <div className="h-6 bg-gray-200 rounded w-2/3" />
             </div>
           </div>
         ))}

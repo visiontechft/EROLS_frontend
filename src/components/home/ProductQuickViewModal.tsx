@@ -4,6 +4,7 @@ import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { StockBadge } from '../ui/Badge';
 import { ProductImage } from '../ProductImage';
+import { formatPrice } from '../../lib/config';
 import { useCart } from '../../contexts/CartContext';
 import { toast } from 'react-toastify';
 import type { Product } from '../../types';
@@ -33,7 +34,7 @@ export function ProductQuickViewModal({ product, onClose }: ProductQuickViewModa
             </p>
             <h3 className="text-xl font-bold text-gray-900 mb-2">{product.name}</h3>
             <p className="text-2xl font-black text-orange-600 mb-2">
-              {product.price.toLocaleString('fr-FR')} FCFA
+              {formatPrice(product.price)} FCFA
             </p>
             <div className="mb-4">
               <StockBadge stock={product.stock} />

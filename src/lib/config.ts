@@ -20,8 +20,9 @@ interface OrderableProduct {
 // DRF serializes DecimalField as a JSON string (e.g. "3000.00"), so price
 // can arrive as a string at runtime even though the TS type says number —
 // coerce defensively before formatting or doing arithmetic.
-const toNumber = (value: number | string) => (typeof value === 'string' ? parseFloat(value) : value);
-const formatFcfa = (value: number | string) => `${toNumber(value).toLocaleString('fr-FR')} FCFA`;
+export const toNumber = (value: number | string) => (typeof value === 'string' ? parseFloat(value) : value);
+export const formatPrice = (value: number | string) => toNumber(value).toLocaleString('fr-FR');
+const formatFcfa = (value: number | string) => `${formatPrice(value)} FCFA`;
 
 /** Builds the pre-filled WhatsApp message for a single-product purchase and
  * opens WhatsApp immediately — no quartier/city step on the site anymore,

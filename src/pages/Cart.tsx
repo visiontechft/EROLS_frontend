@@ -5,7 +5,7 @@ import { useCart } from '../contexts/CartContext';
 import { Button } from '../components/ui/Button';
 import { ConfirmDialog } from '../components/ui/Modal';
 import { ProductImage } from '../components/ProductImage';
-import { buildCartOrderMessage, buildWhatsAppUrl, CONTACT } from '../lib/config';
+import { buildCartOrderMessage, buildWhatsAppUrl, CONTACT, toNumber, formatPrice } from '../lib/config';
 import { toast } from 'react-toastify';
 
 export function Cart() {
@@ -89,7 +89,9 @@ export function Cart() {
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
             {cart.items.map((item) => {
-              const itemTotal = (item.product.price || 0) * item.quantity;
+              const itemPrice = toNumber(item.product.price);
+              const itemOriginalPrice = item.product.original_price ? toNumber(item.product.original_price) : undefined;
+              const itemTotal = itemPrice * item.quantity;
 
               return (
                 <div
@@ -127,14 +129,13 @@ export function Cart() {
                       <div className="flex items-center justify-between mt-4 flex-wrap gap-4">
                         <div>
                           <p className="text-xl font-black text-orange-600">
-                            {(item.product.price || 0).toLocaleString('fr-FR')} FCFA
+                            {formatPrice(itemPrice)} FCFA
                           </p>
-                          {item.product.original_price &&
-                            item.product.original_price > (item.product.price || 0) && (
-                              <p className="text-sm text-gray-400 line-through font-bold">
-                                {(item.product.original_price || 0).toLocaleString('fr-FR')} FCFA
-                              </p>
-                            )}
+                          {itemOriginalPrice !== undefined && itemOriginalPrice > itemPrice && (
+                            <p className="text-sm text-gray-400 line-through font-bold">
+                              {formatPrice(itemOriginalPrice)} FCFA
+                            </p>
+                          )}
                         </div>
 
                         {/* Quantity Controls */}

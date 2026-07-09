@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Heart, ShoppingCart, Eye } from 'lucide-reac
 import { ProductImage } from '../ProductImage';
 import { StockBadge } from '../ui/Badge';
 import { ProductQuickViewModal } from './ProductQuickViewModal';
+import { formatPrice } from '../../lib/config';
 import { useCart } from '../../contexts/CartContext';
 import { useWishlist } from '../../hooks/useWishlist';
 import { toast } from 'react-toastify';
@@ -34,7 +35,7 @@ export function PopularProducts({ products }: PopularProductsProps) {
   };
 
   return (
-    <section className="bg-gray-50 py-16 lg:py-24">
+    <section className="bg-gray-50 py-8 lg:py-24">
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -134,7 +135,7 @@ export function PopularProducts({ products }: PopularProductsProps) {
                   </Link>
                   <div className="flex items-center justify-between">
                     <span className="text-lg font-black text-gray-900">
-                      {product.price.toLocaleString('fr-FR')}
+                      {formatPrice(product.price)}
                       <span className="text-xs font-bold text-gray-500"> FCFA</span>
                     </span>
                     <button
