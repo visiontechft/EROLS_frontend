@@ -11,9 +11,9 @@ export function HomeSkeleton() {
             <div className="h-12 w-full max-w-md rounded-lg bg-white/10" />
             <div className="h-12 w-3/4 rounded-lg bg-white/10" />
             <div className="h-4 w-full max-w-lg rounded bg-white/10" />
-            <div className="flex gap-3 pt-2">
-              <div className="h-14 w-48 rounded-full bg-white/10" />
-              <div className="h-14 w-48 rounded-full bg-white/10" />
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <div className="h-14 w-full sm:w-48 rounded-full bg-white/10" />
+              <div className="h-14 w-full sm:w-48 rounded-full bg-white/10" />
             </div>
           </div>
           <div className="hidden lg:block h-[440px] rounded-3xl bg-white/5" />
