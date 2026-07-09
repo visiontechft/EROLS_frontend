@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { SlidersHorizontal, X } from 'lucide-react';
+import { SlidersHorizontal, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ProductGrid } from '../components/ProductCard';
 import { CategoryPillBar } from '../components/CategoryPillBar';
 import { Button } from '../components/ui/Button';
@@ -230,16 +230,18 @@ export function Products() {
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                  <div className="mt-8 flex items-center justify-center gap-2">
+                  <div className="mt-8 flex items-center justify-center gap-1.5 sm:gap-2">
                     <Button
                       variant="outline"
                       disabled={currentPage === 1}
                       onClick={() => updateFilter('page', currentPage - 1)}
+                      className="shrink-0 !px-3 sm:!px-4"
                     >
-                      Précédent
+                      <ChevronLeft className="h-4 w-4 sm:hidden" />
+                      <span className="hidden sm:inline">Précédent</span>
                     </Button>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide">
                       {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                         let page = i + 1;
 
@@ -258,7 +260,9 @@ export function Products() {
                           <button
                             key={page}
                             onClick={() => updateFilter('page', page)}
-                            className={`w-10 h-10 rounded-lg font-medium transition-colors ${
+                            className={`shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-lg font-medium text-sm sm:text-base transition-colors ${
+                              i >= 3 ? 'hidden sm:inline-flex sm:items-center sm:justify-center' : ''
+                            } ${
                               currentPage === page
                                 ? 'bg-orange-500 text-white'
                                 : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
@@ -269,11 +273,11 @@ export function Products() {
                         );
                       })}
                       {totalPages > 5 && currentPage < totalPages - 2 && (
-                        <>
+                        <div className="hidden sm:flex items-center gap-2">
                           <span className="text-gray-400">...</span>
                           <button
                             onClick={() => updateFilter('page', totalPages)}
-                            className={`w-10 h-10 rounded-lg font-medium transition-colors ${
+                            className={`shrink-0 w-10 h-10 rounded-lg font-medium transition-colors ${
                               currentPage === totalPages
                                 ? 'bg-orange-500 text-white'
                                 : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
@@ -281,7 +285,7 @@ export function Products() {
                           >
                             {totalPages}
                           </button>
-                        </>
+                        </div>
                       )}
                     </div>
 
@@ -289,8 +293,10 @@ export function Products() {
                       variant="outline"
                       disabled={currentPage === totalPages}
                       onClick={() => updateFilter('page', currentPage + 1)}
+                      className="shrink-0 !px-3 sm:!px-4"
                     >
-                      Suivant
+                      <ChevronRight className="h-4 w-4 sm:hidden" />
+                      <span className="hidden sm:inline">Suivant</span>
                     </Button>
                   </div>
                 )}

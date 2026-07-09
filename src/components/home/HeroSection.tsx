@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { ArrowRight, MessageCircle, ShieldCheck, Truck, Wallet } from 'lucide-react';
 import { ProductImage } from '../ProductImage';
@@ -68,14 +68,14 @@ export function HeroSection({ products }: HeroSectionProps) {
           EROLS EasyBuy · Bafoussam
         </motion.span>
 
-        {/* Partial product visual — peeking from the top-right corner */}
+        {/* Product visual — clickable mini-card, shows name/price, stays within bounds */}
         {current && (
           <AnimatePresence mode="wait">
             <motion.div
               key={current.id}
-              className="absolute -right-4 top-6 h-32 w-32 rotate-6 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.06] shadow-2xl backdrop-blur-sm"
-              initial={{ opacity: 0, scale: 0.9, rotate: 10 }}
-              animate={{ opacity: 1, scale: 1, rotate: 6, y: prefersReducedMotion ? 0 : [0, -6, 0] }}
+              className="absolute right-0 top-6 w-28"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1, y: prefersReducedMotion ? 0 : [0, -6, 0] }}
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{
                 opacity: { duration: 0.4 },
@@ -83,12 +83,25 @@ export function HeroSection({ products }: HeroSectionProps) {
                 y: { duration: 3.5, repeat: Infinity, ease: 'easeInOut' },
               }}
             >
-              <ProductImage
-                src={current.image_url}
-                webpSrc={current.image_url_webp}
-                alt={current.name}
-                className="h-full w-full object-cover"
-              />
+              <Link
+                to={`/produits/${current.slug}`}
+                className="block overflow-hidden rounded-2xl border border-white/10 shadow-2xl backdrop-blur-sm active:scale-95 transition-transform"
+              >
+                <div className="h-28 w-28 bg-white/[0.06]">
+                  <ProductImage
+                    src={current.image_url}
+                    webpSrc={current.image_url_webp}
+                    alt={current.name}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div className="bg-white/95 px-2 py-1.5">
+                  <p className="truncate text-[10px] font-bold text-gray-900">{current.name}</p>
+                  <p className="text-[11px] font-black text-orange-600">
+                    {formatPrice(current.price)} <span className="text-[9px] font-bold text-gray-500">FCFA</span>
+                  </p>
+                </div>
+              </Link>
             </motion.div>
           </AnimatePresence>
         )}
@@ -226,27 +239,29 @@ export function HeroSection({ products }: HeroSectionProps) {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -24 }}
                   transition={{ duration: 0.5, ease: 'easeOut' }}
-                  className="absolute inset-0 flex flex-col"
+                  className="absolute inset-0"
                 >
-                  <div className="flex-1 flex items-center justify-center p-10 bg-white/5">
-                    <ProductImage
-                      src={current.image_url}
-                      webpSrc={current.image_url_webp}
-                      alt={current.name}
-                      className="max-h-full max-w-full object-contain drop-shadow-2xl"
-                    />
-                  </div>
-                  <div className="p-6 bg-white/95 backdrop-blur-md">
-                    <p className="text-xs font-bold uppercase tracking-wider text-orange-600">
-                      {current.category?.name || 'EROLS'}
-                    </p>
-                    <h3 className="mt-1 text-lg font-bold text-gray-900 line-clamp-1">
-                      {current.name}
-                    </h3>
-                    <p className="mt-1 text-2xl font-black text-gray-900">
-                      {formatPrice(current.price)} <span className="text-sm font-bold text-gray-500">FCFA</span>
-                    </p>
-                  </div>
+                  <Link to={`/produits/${current.slug}`} className="group flex h-full flex-col">
+                    <div className="flex-1 flex items-center justify-center p-10 bg-white/5">
+                      <ProductImage
+                        src={current.image_url}
+                        webpSrc={current.image_url_webp}
+                        alt={current.name}
+                        className="max-h-full max-w-full object-contain drop-shadow-2xl transition-transform duration-300 group-hover:scale-105"
+                      />
+                    </div>
+                    <div className="p-6 bg-white/95 backdrop-blur-md">
+                      <p className="text-xs font-bold uppercase tracking-wider text-orange-600">
+                        {current.category?.name || 'EROLS'}
+                      </p>
+                      <h3 className="mt-1 text-lg font-bold text-gray-900 line-clamp-1 group-hover:text-orange-600 transition-colors">
+                        {current.name}
+                      </h3>
+                      <p className="mt-1 text-2xl font-black text-gray-900">
+                        {formatPrice(current.price)} <span className="text-sm font-bold text-gray-500">FCFA</span>
+                      </p>
+                    </div>
+                  </Link>
                 </motion.div>
               )}
             </AnimatePresence>
