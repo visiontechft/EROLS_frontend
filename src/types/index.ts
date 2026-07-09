@@ -52,6 +52,7 @@ export interface Product {
   price: number;
   category: Category;
   image_url: string | null;
+  image_url_webp?: string | null;
   stock: number;
   in_stock: boolean;
   is_available: boolean;
@@ -69,6 +70,7 @@ export interface Product {
 export interface ProductImage {
   id: number;
   url: string;
+  url_webp?: string | null;
   alt_text?: string;
   is_primary?: boolean;
   order: number;
@@ -87,6 +89,14 @@ export interface Brand {
   name: string;
   product_count: number;
   image_url: string | null;
+}
+
+export interface HomepageData {
+  featured: Product[];
+  popular: Product[];
+  featured_per_category: Product[];
+  categories: Category[];
+  brands: Brand[];
 }
 
 // ========== Cart Types ==========

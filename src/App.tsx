@@ -1,4 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from './lib/queryClient';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
 import { Navbar } from './components/Navbar';
@@ -26,6 +28,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 
 function App() {
   return (
+    <QueryClientProvider client={queryClient}>
     <BrowserRouter>
       <ScrollToTop /> {/* ⬅️ 2. Ajoutez cette ligne */}
       <AuthProvider>
@@ -66,6 +69,7 @@ function App() {
         </CartProvider>
       </AuthProvider>
     </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 
