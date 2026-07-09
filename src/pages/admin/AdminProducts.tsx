@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Plus, Save, TrendingUp } from 'lucide-react';
+import { Plus, Save, TrendingUp, ShieldCheck } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { categoriesApi, productsApi } from '../../lib/api';
+import { PRICE_TIERS, applyTierBonus } from '../../lib/priceTiers';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { PageLoader } from '../../components/ui/LoadingSpinner';
@@ -47,22 +48,29 @@ export function AdminProducts() {
   const [priceMaxPrice, setPriceMaxPrice] = useState('');
   const [showPriceConfirm, setShowPriceConfirm] = useState(false);
   const [isApplyingPrice, setIsApplyingPrice] = useState(false);
-
-  // Barème de revente confirmé : bonus fixe par palier de prix.
-  const PRICE_TIERS = [
-    { label: '200 – 499 F', min: 0, max: 499, bonus: 300 },
-    { label: '500 – 1 499 F', min: 500, max: 1499, bonus: 500 },
-    { label: '1 500 – 3 999 F', min: 1500, max: 3999, bonus: 1000 },
-    { label: '4 000 – 19 999 F', min: 4000, max: 19999, bonus: 2000 },
-    { label: '20 000 – 49 999 F', min: 20000, max: 49999, bonus: 3000 },
-    { label: '50 000 F et plus', min: 50000, max: undefined, bonus: 5000 },
-  ] as const;
+  const [showBaremeConfirm, setShowBaremeConfirm] = useState(false);
+  const [isApplyingBareme, setIsApplyingBareme] = useState(false);
 
   const applyPreset = (tier: (typeof PRICE_TIERS)[number]) => {
     setPriceMode('fixed');
     setPriceValue(String(tier.bonus));
     setPriceMinPrice(String(tier.min));
     setPriceMaxPrice(tier.max !== undefined ? String(tier.max) : '');
+  };
+
+  const applyFullBareme = async () => {
+    setIsApplyingBareme(true);
+    try {
+      const result = await productsApi.bulkUpdatePriceTiers({
+        tiers: PRICE_TIERS.map((t) => ({ min_price: t.min, max_price: t.max, bonus: t.bonus })),
+      });
+      toast.success(`${result.updated} produit(s) ajusté(s) selon le barème complet`);
+      setShowBaremeConfirm(false);
+    } catch (error: any) {
+      toast.error(error?.message || "Échec de l'application du barème");
+    } finally {
+      setIsApplyingBareme(false);
+    }
   };
 
   useEffect(() => {
@@ -87,7 +95,9 @@ export function AdminProducts() {
         name: row.name,
         description: row.description,
         category: Number(row.category_id),
-        price: Number(row.price),
+        // row.price est le prix d'achat saisi ; le prix de vente réel applique
+        // automatiquement le bonus du barème confirmé (voir lib/priceTiers.ts).
+        price: applyTierBonus(Number(row.price)),
         stock: Number(row.stock),
         is_available: true,
       });
@@ -194,10 +204,33 @@ export function AdminProducts() {
             Applique une marge sur les prix existants (utile après un import au prix de gros).
           </p>
 
-          {/* Barème confirmé : un clic pré-remplit le palier, "Appliquer" reste à cliquer */}
+          {/* Action recommandée : tout le barème en une seule passe atomique côté serveur,
+              sans risque de double-ajustement (contrairement aux paliers cliqués un par un). */}
+          <div className="mb-5 rounded-xl border-2 border-orange-200 bg-orange-50 p-4">
+            <div className="flex items-center gap-2 mb-1.5">
+              <ShieldCheck size={18} className="text-orange-600" />
+              <h3 className="text-sm font-bold text-gray-900">Appliquer tout le barème (recommandé)</h3>
+            </div>
+            <p className="text-xs text-gray-600 mb-3">
+              Applique les 6 paliers d'un coup, chaque produit n'étant évalué qu'une seule fois
+              contre son prix actuel — aucun risque qu'un produit déjà ajusté soit repris par le
+              palier suivant.
+            </p>
+            <Button variant="primary" size="sm" onClick={() => setShowBaremeConfirm(true)}>
+              Appliquer tout le barème
+            </Button>
+          </div>
+
+          {/* Barèmes rapides : pour un ajustement ponctuel (une seule tranche/catégorie).
+              ⚠️ Ne cliquez ces boutons qu'un par un et un seul à la fois : un produit déjà
+              ajusté peut changer de tranche et se faire re-ajuster par un palier suivant. */}
           <div className="mb-4">
-            <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">
-              Barèmes rapides
+            <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1">
+              Barèmes rapides (ajustement ponctuel d'un seul palier)
+            </p>
+            <p className="text-xs text-gray-500 mb-2">
+              ⚠️ N'applique qu'un seul palier à la fois — utilisez plutôt "Appliquer tout le
+              barème" ci-dessus pour ajuster tout le catalogue sans risque.
             </p>
             <div className="flex flex-wrap gap-2">
               {PRICE_TIERS.map((tier) => (
@@ -266,6 +299,16 @@ export function AdminProducts() {
           isLoading={isApplyingPrice}
           title="Confirmer l'ajustement des prix"
           message={`Cette action va modifier le prix de ${priceScopeLabel} : ${priceChangeLabel}. Cette action ne peut pas être annulée automatiquement.`}
+          confirmText="Confirmer"
+        />
+
+        <ConfirmDialog
+          isOpen={showBaremeConfirm}
+          onClose={() => setShowBaremeConfirm(false)}
+          onConfirm={applyFullBareme}
+          isLoading={isApplyingBareme}
+          title="Confirmer l'application du barème complet"
+          message="Cette action va appliquer les 6 paliers de prix à tous les produits, chacun évalué une seule fois selon son prix actuel. Cette action ne peut pas être annulée automatiquement."
           confirmText="Confirmer"
         />
 

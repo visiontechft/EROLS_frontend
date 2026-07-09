@@ -2,6 +2,7 @@ import { Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Input, Textarea } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { ImageDropzone } from '../../components/ImageDropzone';
+import { applyTierBonus } from '../../lib/priceTiers';
 import type { Category } from '../../types';
 import type { DraftProductRow } from './AdminProducts';
 
@@ -16,6 +17,8 @@ interface AdminProductRowProps {
 export function AdminProductRow({ row, categories, onChange, onRemove, onSave }: AdminProductRowProps) {
   const isSaved = row.status === 'saved';
   const isSaving = row.status === 'saving';
+  const costPrice = Number(row.price);
+  const suggestedSellPrice = row.price && !Number.isNaN(costPrice) ? applyTierBonus(costPrice) : null;
 
   return (
     <div
@@ -48,14 +51,21 @@ export function AdminProductRow({ row, categories, onChange, onRemove, onSave }:
               ))}
             </select>
           </div>
-          <Input
-            label="Prix (FCFA)"
-            type="number"
-            value={row.price}
-            onChange={(e) => onChange({ price: e.target.value })}
-            disabled={isSaved}
-            required
-          />
+          <div>
+            <Input
+              label="Prix d'achat (FCFA)"
+              type="number"
+              value={row.price}
+              onChange={(e) => onChange({ price: e.target.value })}
+              disabled={isSaved}
+              required
+            />
+            {suggestedSellPrice !== null && (
+              <p className="mt-1 text-xs font-bold text-orange-600">
+                Prix de vente (barème auto) : {suggestedSellPrice.toLocaleString('fr-FR')} FCFA
+              </p>
+            )}
+          </div>
           <Input
             label="Stock"
             type="number"

@@ -275,6 +275,17 @@ export const productsApi = {
     return response.data;
   },
 
+  // Applique tout un barème de paliers en une seule passe atomique côté serveur —
+  // chaque produit n'est évalué qu'une fois contre son prix actuel, donc aucun
+  // risque de double-ajustement (contrairement à bulkUpdatePrices appelé palier par palier).
+  bulkUpdatePriceTiers: async (data: {
+    tiers: { min_price?: number; max_price?: number; bonus: number }[];
+    category_id?: number;
+  }): Promise<{ updated: number }> => {
+    const response = await apiClient.post<{ updated: number }>('/products/bulk-price-tiers/', data);
+    return response.data;
+  },
+
   createProduct: async (data: {
     name: string;
     description: string;
