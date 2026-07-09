@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Filter, X } from 'lucide-react';
+import { SlidersHorizontal, X } from 'lucide-react';
 import { ProductGrid } from '../components/ProductCard';
+import { CategoryPillBar } from '../components/CategoryPillBar';
 import { Button } from '../components/ui/Button';
 import { useProducts } from '../hooks/queries/useProducts';
 import { useCategories, usePrefetchCategoryProducts } from '../hooks/queries/useCategories';
@@ -9,7 +10,7 @@ import type { ProductFilters } from '../types';
 
 export function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [showFilters, setShowFilters] = useState(false);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   // Filter states
   const [filters, setFilters] = useState<ProductFilters>({
@@ -47,6 +48,7 @@ export function Products() {
     setSearchParams({});
   };
 
+  const advancedFilterCount = [filters.min_price, filters.max_price, filters.sort_by].filter(Boolean).length;
   const activeFilterCount = [
     filters.category,
     filters.search,
@@ -61,26 +63,29 @@ export function Products() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Tous nos produits
-          </h1>
-          <p className="text-gray-600">
-            {pagination
-              ? `${pagination.count} produit${pagination.count > 1 ? 's' : ''} disponible${pagination.count > 1 ? 's' : ''}`
-              : 'Chargement...'}
+      {/* Header */}
+      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-4">
+        <div className="flex items-end justify-between gap-4">
+          <h1 className="text-2xl lg:text-3xl font-black text-gray-900">Tous nos produits</h1>
+          <p className="text-xs text-gray-400 font-medium shrink-0">
+            {pagination ? `${pagination.count} produit${pagination.count > 1 ? 's' : ''}` : ' '}
           </p>
         </div>
+      </div>
 
+      {/* Category pill bar — primary mobile nav, sticky under the site header (nav + mobile search bar ≈ 122px) */}
+      <div className="lg:hidden sticky top-[122px] z-20 bg-gray-50/95 backdrop-blur-sm border-b border-gray-100 py-3">
+        <CategoryPillBar
+          categories={categories}
+          selected={filters.category}
+          onSelect={(slug) => updateFilter('category', slug)}
+        />
+      </div>
+
+      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Filters Sidebar */}
-          <aside
-            className={`lg:w-64 flex-shrink-0 ${
-              showFilters ? 'block' : 'hidden lg:block'
-            }`}
-          >
+          {/* Filters Sidebar (desktop only) */}
+          <aside className="hidden lg:block lg:w-64 flex-shrink-0">
             <div className="bg-white rounded-lg shadow-md p-6 sticky top-24">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-semibold text-gray-900">Filtres</h2>
@@ -93,24 +98,6 @@ export function Products() {
                   </button>
                 )}
               </div>
-
-              {/* Search */}
-              {filters.search && (
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Recherche
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">"{filters.search}"</span>
-                    <button
-                      onClick={() => updateFilter('search', undefined)}
-                      className="text-gray-400 hover:text-gray-600"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
 
               {/* Categories */}
               <div className="mb-6">
@@ -206,21 +193,20 @@ export function Products() {
 
           {/* Products Grid */}
           <main className="flex-1">
-            {/* Mobile Filter Toggle */}
+            {/* Mobile: advanced filters trigger (price + sort only — categories live in the pill bar above) */}
             <div className="lg:hidden mb-4">
-              <Button
-                variant="outline"
-                fullWidth
-                onClick={() => setShowFilters(!showFilters)}
-                leftIcon={<Filter className="h-5 w-5" />}
+              <button
+                onClick={() => setShowAdvancedFilters(true)}
+                className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-700 shadow-sm"
               >
-                Filtres
-                {activeFilterCount > 0 && (
-                  <span className="ml-2 bg-orange-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                    {activeFilterCount}
+                <SlidersHorizontal className="h-4 w-4" />
+                Filtres avancés
+                {advancedFilterCount > 0 && (
+                  <span className="bg-orange-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {advancedFilterCount}
                   </span>
                 )}
-              </Button>
+              </button>
             </div>
 
             {isLoading ? (
@@ -313,6 +299,72 @@ export function Products() {
           </main>
         </div>
       </div>
+
+      {/* Mobile advanced filters bottom sheet */}
+      {showAdvancedFilters && (
+        <div className="lg:hidden fixed inset-0 z-50 flex items-end">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowAdvancedFilters(false)}
+          />
+          <div className="relative w-full bg-white rounded-t-3xl p-6 pb-8 max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-black text-gray-900">Filtres avancés</h2>
+              <button
+                onClick={() => setShowAdvancedFilters(false)}
+                className="h-9 w-9 rounded-full bg-gray-100 flex items-center justify-center"
+              >
+                <X className="h-5 w-5 text-gray-600" />
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-bold text-gray-700 mb-3">Prix (FCFA)</label>
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  type="number"
+                  placeholder="Min"
+                  value={filters.min_price || ''}
+                  onChange={(e) => updateFilter('min_price', e.target.value ? Number(e.target.value) : undefined)}
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+                <input
+                  type="number"
+                  placeholder="Max"
+                  value={filters.max_price || ''}
+                  onChange={(e) => updateFilter('max_price', e.target.value ? Number(e.target.value) : undefined)}
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-bold text-gray-700 mb-3">Trier par</label>
+              <select
+                value={filters.sort_by || ''}
+                onChange={(e) => updateFilter('sort_by', e.target.value || undefined)}
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+              >
+                <option value="">Par défaut</option>
+                <option value="price_asc">Prix croissant</option>
+                <option value="price_desc">Prix décroissant</option>
+                <option value="name_asc">Nom A-Z</option>
+                <option value="name_desc">Nom Z-A</option>
+                <option value="newest">Plus récents</option>
+              </select>
+            </div>
+
+            <div className="flex gap-3">
+              <Button variant="outline" fullWidth onClick={clearFilters}>
+                Réinitialiser
+              </Button>
+              <Button fullWidth onClick={() => setShowAdvancedFilters(false)}>
+                Voir les résultats
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

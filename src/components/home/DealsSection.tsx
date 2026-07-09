@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Percent } from 'lucide-react';
 import { ProductImage } from '../ProductImage';
+import { toNumber, formatPrice } from '../../lib/config';
 import type { Product } from '../../types';
 
 interface DealsSectionProps {
@@ -14,11 +15,11 @@ interface DealsSectionProps {
  * fake countdown would just be a manipulative urgency trick.
  */
 export function DealsSection({ products }: DealsSectionProps) {
-  const deals = products.filter((p) => p.original_price && p.original_price > p.price);
+  const deals = products.filter((p) => p.original_price && toNumber(p.original_price) > toNumber(p.price));
   if (deals.length === 0) return null;
 
   return (
-    <section className="bg-gray-900 py-16 lg:py-24">
+    <section className="bg-gray-900 py-8 lg:py-24">
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -35,9 +36,8 @@ export function DealsSection({ products }: DealsSectionProps) {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
           {deals.slice(0, 8).map((product, i) => {
-            const percent = Math.round(
-              ((product.original_price! - product.price) / product.original_price!) * 100
-            );
+            const originalPrice = toNumber(product.original_price!);
+            const percent = Math.round(((originalPrice - toNumber(product.price)) / originalPrice) * 100);
             return (
               <motion.div
                 key={product.id}
@@ -66,10 +66,10 @@ export function DealsSection({ products }: DealsSectionProps) {
                     </h3>
                     <div className="flex items-baseline gap-2">
                       <span className="text-lg font-black text-orange-600">
-                        {product.price.toLocaleString('fr-FR')}
+                        {formatPrice(product.price)}
                       </span>
                       <span className="text-xs text-gray-400 line-through">
-                        {product.original_price!.toLocaleString('fr-FR')}
+                        {formatPrice(product.original_price!)}
                       </span>
                     </div>
                   </div>

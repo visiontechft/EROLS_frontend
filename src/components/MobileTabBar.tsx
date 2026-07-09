@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import {
   Home,
   LayoutGrid,
@@ -36,47 +37,82 @@ export function MobileTabBar() {
     await logout();
   };
 
-  const tabClass = (active: boolean) =>
-    `flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-xs font-medium transition-colors ${
-      active ? 'text-orange-500' : 'text-gray-500'
-    }`;
+  const Tab = ({
+    active,
+    icon: Icon,
+    label,
+    badge,
+    ...linkProps
+  }: {
+    active: boolean;
+    icon: typeof Home;
+    label: string;
+    badge?: ReactNode;
+  } & ({ to: string } | { onClick: () => void })) => {
+    const content = (
+      <motion.div
+        className="relative flex flex-col items-center justify-center gap-0.5"
+        animate={{ y: active ? -2 : 0 }}
+        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+      >
+        {active && (
+          <motion.span
+            layoutId="tabbar-active-bg"
+            className="absolute -inset-x-3.5 -inset-y-1.5 rounded-2xl bg-orange-50"
+            transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+          />
+        )}
+        <span className="relative">
+          <Icon size={active ? 24 : 22} strokeWidth={active ? 2.4 : 2} className={active ? 'text-orange-500' : 'text-gray-500'} />
+          {badge}
+        </span>
+        <span className={`relative text-[11px] ${active ? 'font-bold text-orange-500' : 'font-medium text-gray-500'}`}>
+          {label}
+        </span>
+      </motion.div>
+    );
+
+    const className = 'flex flex-1 h-full items-center justify-center';
+
+    return 'to' in linkProps ? (
+      <Link to={linkProps.to} className={className}>
+        {content}
+      </Link>
+    ) : (
+      <button onClick={linkProps.onClick} className={className}>
+        {content}
+      </button>
+    );
+  };
 
   return (
     <>
       <nav
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 flex h-16"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 flex h-16 border-t border-gray-200/60 bg-white/85 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] backdrop-blur-xl"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <Link to="/" className={tabClass(isActive('/'))}>
-          <Home size={22} />
-          Accueil
-        </Link>
-        <Link to="/produits" className={tabClass(isActive('/produits'))}>
-          <LayoutGrid size={22} />
-          Produits
-        </Link>
-        <Link to="/panier" className={`${tabClass(isActive('/panier'))} relative`}>
-          <span className="relative">
-            <ShoppingCart size={22} />
-            {cart.itemCount > 0 && (
+        <Tab to="/" active={isActive('/')} icon={Home} label="Accueil" />
+        <Tab to="/produits" active={isActive('/produits')} icon={LayoutGrid} label="Produits" />
+        <Tab
+          to="/panier"
+          active={isActive('/panier')}
+          icon={ShoppingCart}
+          label="Panier"
+          badge={
+            cart.itemCount > 0 && (
               <span className="absolute -top-1.5 -right-2 bg-orange-500 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
                 {cart.itemCount}
               </span>
-            )}
-          </span>
-          Panier
-        </Link>
-        <Link
+            )
+          }
+        />
+        <Tab
           to={isAuthenticated ? '/profil' : '/login'}
-          className={tabClass(isActive('/profil') || isActive('/login'))}
-        >
-          <User size={22} />
-          Compte
-        </Link>
-        <button onClick={() => setIsSheetOpen(true)} className={tabClass(isSheetOpen)}>
-          <Menu size={22} />
-          Plus
-        </button>
+          active={isActive('/profil') || isActive('/login')}
+          icon={User}
+          label="Compte"
+        />
+        <Tab onClick={() => setIsSheetOpen(true)} active={isSheetOpen} icon={Menu} label="Plus" />
       </nav>
 
       {isSheetOpen && (

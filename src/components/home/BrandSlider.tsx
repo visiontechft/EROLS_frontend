@@ -12,7 +12,7 @@ export function BrandSlider({ brands }: BrandSliderProps) {
   const loop = [...brands, ...brands];
 
   return (
-    <section className="py-14 lg:py-20 bg-white border-y border-gray-100 overflow-hidden">
+    <section className="py-8 lg:py-20 bg-white border-y border-gray-100 overflow-hidden">
       <motion.p
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}

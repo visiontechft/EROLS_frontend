@@ -9,13 +9,13 @@ import { buildWhatsAppUrl, CONTACT } from '../../lib/config';
  */
 export function WhatsAppCommunity() {
   return (
-    <section className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
+    <section className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-20">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-80px' }}
         transition={{ duration: 0.5 }}
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-orange-500 to-orange-600 px-8 py-14 lg:px-16 lg:py-16 text-center"
+        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-orange-500 to-orange-600 px-8 py-8 lg:px-16 lg:py-16 text-center"
       >
         <div className="pointer-events-none absolute -top-16 -right-16 h-64 w-64 rounded-full bg-white/10" />
         <div className="pointer-events-none absolute -bottom-20 -left-10 h-64 w-64 rounded-full bg-black/5" />

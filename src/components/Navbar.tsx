@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   ShoppingCart,
@@ -7,6 +7,7 @@ import {
   LogOut,
   Package,
   LayoutGrid,
+  Mic,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useCart } from '../contexts/CartContext';
@@ -21,6 +22,38 @@ export function Navbar() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  const SpeechRecognitionApi =
+    typeof window !== 'undefined' && ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
+
+  const handleVoiceSearch = () => {
+    if (!SpeechRecognitionApi) return;
+
+    if (isListening) {
+      recognitionRef.current?.stop();
+      return;
+    }
+
+    const recognition = new SpeechRecognitionApi();
+    recognition.lang = 'fr-FR';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => setIsListening(false);
+    recognition.onresult = (event: any) => {
+      const transcript = event.results?.[0]?.[0]?.transcript;
+      if (transcript) {
+        navigate(`/produits?search=${encodeURIComponent(transcript.trim())}`);
+      }
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+  };
 
   // Handle scroll effect
   useEffect(() => {
@@ -101,14 +134,14 @@ export function Navbar() {
             className="hidden md:flex items-center flex-1 max-w-md mx-8"
           >
             <div className="relative w-full">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Rechercher des produits..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             </div>
           </form>
 
@@ -199,15 +232,27 @@ export function Navbar() {
           onSubmit={handleSearch}
           className="md:hidden pb-4"
         >
-          <div className="relative">
+          <div className="relative flex items-center rounded-full border border-gray-200 bg-white shadow-sm focus-within:ring-2 focus-within:ring-orange-500 transition-shadow">
+            <Search className="absolute left-4 h-4 w-4 text-gray-400 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Rechercher..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full pl-10 pr-2 py-2.5 rounded-full bg-transparent focus:outline-none"
             />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            {SpeechRecognitionApi && (
+              <button
+                type="button"
+                onClick={handleVoiceSearch}
+                aria-label={isListening ? "Arrêter l'écoute" : 'Recherche vocale'}
+                className={`mr-1.5 shrink-0 h-8 w-8 flex items-center justify-center rounded-full transition-colors ${
+                  isListening ? 'bg-red-500 text-white animate-pulse' : 'text-gray-400 hover:bg-gray-100 hover:text-orange-500'
+                }`}
+              >
+                <Mic className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </form>
       </div>

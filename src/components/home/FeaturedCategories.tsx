@@ -13,7 +13,7 @@ export function FeaturedCategories({ categories, categoryImages }: FeaturedCateg
   if (categories.length === 0) return null;
 
   return (
-    <section className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+    <section className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-24">
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         whileInView={{ opacity: 1, y: 0 }}

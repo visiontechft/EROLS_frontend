@@ -4,7 +4,7 @@ export function HomeSkeleton() {
   return (
     <div className="min-h-screen bg-white animate-pulse">
       {/* Hero */}
-      <div className="bg-gray-950 py-14 lg:py-24">
+      <div className="bg-gray-950 py-8 lg:py-24">
         <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-5">
             <div className="h-6 w-40 rounded-full bg-white/10" />
@@ -26,7 +26,7 @@ export function HomeSkeleton() {
       </div>
 
       {/* Categories */}
-      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-24">
         <div className="h-8 w-56 rounded bg-gray-100 mb-10" />
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
           {Array.from({ length: 8 }).map((_, i) => (
@@ -36,7 +36,7 @@ export function HomeSkeleton() {
       </div>
 
       {/* Product carousel */}
-      <div className="bg-gray-50 py-16 lg:py-24">
+      <div className="bg-gray-50 py-8 lg:py-24">
         <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="h-8 w-56 rounded bg-gray-200 mb-10" />
           <div className="flex gap-5 overflow-hidden">

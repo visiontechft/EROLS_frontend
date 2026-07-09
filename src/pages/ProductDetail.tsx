@@ -4,15 +4,13 @@ import {
   Share2, Star, ChevronLeft, ChevronRight,
   Truck, Shield, Package, MessageCircle, ShoppingCart, X, Clock, Check, Hand
 } from 'lucide-react';
-import { ordersApi } from '../lib/api';
 import { useCart } from '../contexts/CartContext';
-import { useCities } from '../hooks/useCities';
 import { useProduct, useRelatedProducts } from '../hooks/queries/useProduct';
 import { Button } from '../components/ui/Button';
 import { Badge, StockBadge } from '../components/ui/Badge';
 import { PageLoader } from '../components/ui/LoadingSpinner';
-import { QuartierSelectModal } from '../components/QuartierSelectModal';
 import { ProductGrid } from '../components/ProductCard';
+import { buildProductOrderMessage, buildWhatsAppUrl, CONTACT, toNumber, formatPrice } from '../lib/config';
 import { toast } from 'react-toastify';
 
 // --- COMPOSANT DE ZOOM HAUTE PRÉCISION (Desktop + Mobile) ---
@@ -169,11 +167,8 @@ export function ProductDetail() {
   const navigate = useNavigate();
   const { addToCart } = useCart();
 
-  const { cities } = useCities();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [showCityModal, setShowCityModal] = useState(false);
-  const [submittingCityId, setSubmittingCityId] = useState<number | null>(null);
 
   const { data: product, isLoading, isError } = useProduct(slug);
   const { data: relatedProducts = [] } = useRelatedProducts(slug);
@@ -194,7 +189,9 @@ export function ProductDetail() {
       toast.info('Veuillez vous connecter');
       return navigate('/login');
     }
-    setShowCityModal(true);
+    if (!product) return;
+    const message = buildProductOrderMessage(product, quantity);
+    window.open(buildWhatsAppUrl(CONTACT.whatsappNumber, message), '_blank');
   };
 
   if (isLoading) return <PageLoader />;
@@ -204,10 +201,10 @@ export function ProductDetail() {
   const currentImage = images[selectedImageIndex] || images[0];
   const imageUrl = currentImage?.url || product.image_url;
 
-  const hasDiscount = product.original_price && product.original_price > product.price;
-  const discountPercent = hasDiscount 
-    ? Math.round(((product.original_price! - product.price!) / product.original_price!) * 100)
-    : 0;
+  const price = toNumber(product.price);
+  const originalPrice = product.original_price ? toNumber(product.original_price) : undefined;
+  const hasDiscount = originalPrice !== undefined && originalPrice > price;
+  const discountPercent = hasDiscount ? Math.round(((originalPrice! - price) / originalPrice!) * 100) : 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-orange-50/30">
@@ -307,12 +304,12 @@ export function ProductDetail() {
             <div className="bg-gradient-to-r from-orange-50 to-orange-100 p-6 rounded-2xl border-2 border-orange-200">
               <div className="flex items-baseline gap-3 flex-wrap">
                 <span className="text-5xl font-black text-orange-600">
-                  {(product.price || 0).toLocaleString()}
+                  {formatPrice(price)}
                 </span>
                 <span className="text-2xl font-black text-gray-800">FCFA</span>
                 {hasDiscount && (
                   <span className="text-xl text-gray-400 line-through font-bold">
-                    {(product.original_price || 0).toLocaleString()} FCFA
+                    {formatPrice(originalPrice!)} FCFA
                   </span>
                 )}
               </div>
@@ -418,30 +415,6 @@ export function ProductDetail() {
           </div>
         )}
       </div>
-
-      {/* Modal de sélection de quartier */}
-      <QuartierSelectModal
-        isOpen={showCityModal}
-        onClose={() => setShowCityModal(false)}
-        quartiers={cities}
-        submittingId={submittingCityId}
-        onSelect={async (city) => {
-          try {
-            setSubmittingCityId(city.id);
-            const res = await ordersApi.initiateOrder({
-              product_id: product.id,
-              city_id: city.id,
-              quantity,
-            });
-            window.open(res.whatsapp_url, '_blank');
-            setShowCityModal(false);
-          } catch (error) {
-            toast.error('Erreur lors de la commande');
-          } finally {
-            setSubmittingCityId(null);
-          }
-        }}
-      />
     </div>
   );
 }

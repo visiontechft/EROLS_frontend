@@ -2,22 +2,15 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, MessageCircle, Clock, AlertTriangle, Check } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
-import { ordersApi } from '../lib/api';
-import { useCities } from '../hooks/useCities';
 import { Button } from '../components/ui/Button';
 import { ConfirmDialog } from '../components/ui/Modal';
-import { QuartierSelectModal } from '../components/QuartierSelectModal';
 import { ProductImage } from '../components/ProductImage';
-import type { City } from '../types';
+import { buildCartOrderMessage, buildWhatsAppUrl, CONTACT, toNumber, formatPrice } from '../lib/config';
 import { toast } from 'react-toastify';
 
 export function Cart() {
   const navigate = useNavigate();
   const { cart, removeFromCart, updateQuantity, clearCart } = useCart();
-  const { cities } = useCities();
-  const [selectedCity, setSelectedCity] = useState<City | null>(null);
-  const [showCityModal, setShowCityModal] = useState(false);
-  const [isOrdering, setIsOrdering] = useState(false);
   const [showClearDialog, setShowClearDialog] = useState(false);
   const [itemToRemove, setItemToRemove] = useState<number | null>(null);
 
@@ -38,38 +31,11 @@ export function Cart() {
       navigate('/login', { state: { from: '/panier' } });
       return;
     }
-    setShowCityModal(true);
-  };
 
-  const handleCitySelect = async (city: City) => {
-    try {
-      setIsOrdering(true);
-      setSelectedCity(city);
-
-      const items = cart.items.map(item => ({
-        product_id: item.product.id,
-        quantity: item.quantity,
-      }));
-
-      const response = await ordersApi.initiateCartOrder({
-        items,
-        city_id: city.id,
-      });
-
-      toast.success('Commande initiée sur WhatsApp !');
-      clearCart();
-      window.open(response.whatsapp_url, '_blank');
-      
-      setTimeout(() => {
-        navigate('/mes-commandes');
-      }, 2000);
-    } catch (error: any) {
-      console.error('Error initiating order:', error);
-      toast.error(error.message || 'Erreur lors de l\'initiation de la commande');
-    } finally {
-      setIsOrdering(false);
-      setShowCityModal(false);
-    }
+    const message = buildCartOrderMessage(cart.items);
+    window.open(buildWhatsAppUrl(CONTACT.whatsappNumber, message), '_blank');
+    clearCart();
+    toast.success('Commande envoyée sur WhatsApp !');
   };
 
   if (cart.items.length === 0) {
@@ -123,7 +89,9 @@ export function Cart() {
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
             {cart.items.map((item) => {
-              const itemTotal = (item.product.price || 0) * item.quantity;
+              const itemPrice = toNumber(item.product.price);
+              const itemOriginalPrice = item.product.original_price ? toNumber(item.product.original_price) : undefined;
+              const itemTotal = itemPrice * item.quantity;
 
               return (
                 <div
@@ -161,14 +129,13 @@ export function Cart() {
                       <div className="flex items-center justify-between mt-4 flex-wrap gap-4">
                         <div>
                           <p className="text-xl font-black text-orange-600">
-                            {(item.product.price || 0).toLocaleString('fr-FR')} FCFA
+                            {formatPrice(itemPrice)} FCFA
                           </p>
-                          {item.product.original_price &&
-                            item.product.original_price > (item.product.price || 0) && (
-                              <p className="text-sm text-gray-400 line-through font-bold">
-                                {(item.product.original_price || 0).toLocaleString('fr-FR')} FCFA
-                              </p>
-                            )}
+                          {itemOriginalPrice !== undefined && itemOriginalPrice > itemPrice && (
+                            <p className="text-sm text-gray-400 line-through font-bold">
+                              {formatPrice(itemOriginalPrice)} FCFA
+                            </p>
+                          )}
                         </div>
 
                         {/* Quantity Controls */}
@@ -301,16 +268,6 @@ export function Cart() {
           </div>
         </div>
       </div>
-
-      {/* Modal de sélection de quartier */}
-      <QuartierSelectModal
-        isOpen={showCityModal}
-        onClose={() => setShowCityModal(false)}
-        quartiers={cities}
-        onSelect={handleCitySelect}
-        submittingId={isOrdering ? selectedCity?.id ?? null : null}
-        footerNote={`Livraison en 10 min - 1h max • Total: ${(cart.total || 0).toLocaleString('fr-FR')} FCFA`}
-      />
 
       {/* Remove Item Confirmation */}
       <ConfirmDialog

@@ -29,7 +29,7 @@ export function SearchSection() {
   };
 
   return (
-    <section className="relative -mt-8 lg:-mt-10 z-10 px-4 sm:px-6 lg:px-8">
+    <section className="relative mt-8 lg:-mt-10 z-10 px-4 sm:px-6 lg:px-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
