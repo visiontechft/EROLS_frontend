@@ -25,13 +25,6 @@ export function Cart() {
   };
 
   const handleCheckoutClick = () => {
-    const token = localStorage.getItem('auth_token');
-    if (!token) {
-      toast.info('Veuillez vous connecter pour commander');
-      navigate('/login', { state: { from: '/panier' } });
-      return;
-    }
-
     const message = buildCartOrderMessage(cart.items);
     window.open(buildWhatsAppUrl(CONTACT.whatsappNumber, message), '_blank');
     clearCart();
