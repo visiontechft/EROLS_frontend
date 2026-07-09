@@ -185,10 +185,6 @@ export function ProductDetail() {
   }, [isError, navigate]);
 
   const handleOrderNow = () => {
-    if (!localStorage.getItem('auth_token')) {
-      toast.info('Veuillez vous connecter');
-      return navigate('/login');
-    }
     if (!product) return;
     const message = buildProductOrderMessage(product, quantity);
     window.open(buildWhatsAppUrl(CONTACT.whatsappNumber, message), '_blank');
