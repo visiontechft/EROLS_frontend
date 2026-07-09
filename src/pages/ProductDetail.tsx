@@ -4,15 +4,13 @@ import {
   Share2, Star, ChevronLeft, ChevronRight,
   Truck, Shield, Package, MessageCircle, ShoppingCart, X, Clock, Check, Hand
 } from 'lucide-react';
-import { ordersApi } from '../lib/api';
 import { useCart } from '../contexts/CartContext';
-import { useCities } from '../hooks/useCities';
 import { useProduct, useRelatedProducts } from '../hooks/queries/useProduct';
 import { Button } from '../components/ui/Button';
 import { Badge, StockBadge } from '../components/ui/Badge';
 import { PageLoader } from '../components/ui/LoadingSpinner';
-import { QuartierSelectModal } from '../components/QuartierSelectModal';
 import { ProductGrid } from '../components/ProductCard';
+import { buildProductOrderMessage, buildWhatsAppUrl, CONTACT } from '../lib/config';
 import { toast } from 'react-toastify';
 
 // --- COMPOSANT DE ZOOM HAUTE PRÉCISION (Desktop + Mobile) ---
@@ -169,11 +167,8 @@ export function ProductDetail() {
   const navigate = useNavigate();
   const { addToCart } = useCart();
 
-  const { cities } = useCities();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [showCityModal, setShowCityModal] = useState(false);
-  const [submittingCityId, setSubmittingCityId] = useState<number | null>(null);
 
   const { data: product, isLoading, isError } = useProduct(slug);
   const { data: relatedProducts = [] } = useRelatedProducts(slug);
@@ -194,7 +189,9 @@ export function ProductDetail() {
       toast.info('Veuillez vous connecter');
       return navigate('/login');
     }
-    setShowCityModal(true);
+    if (!product) return;
+    const message = buildProductOrderMessage(product, quantity);
+    window.open(buildWhatsAppUrl(CONTACT.whatsappNumber, message), '_blank');
   };
 
   if (isLoading) return <PageLoader />;
@@ -418,30 +415,6 @@ export function ProductDetail() {
           </div>
         )}
       </div>
-
-      {/* Modal de sélection de quartier */}
-      <QuartierSelectModal
-        isOpen={showCityModal}
-        onClose={() => setShowCityModal(false)}
-        quartiers={cities}
-        submittingId={submittingCityId}
-        onSelect={async (city) => {
-          try {
-            setSubmittingCityId(city.id);
-            const res = await ordersApi.initiateOrder({
-              product_id: product.id,
-              city_id: city.id,
-              quantity,
-            });
-            window.open(res.whatsapp_url, '_blank');
-            setShowCityModal(false);
-          } catch (error) {
-            toast.error('Erreur lors de la commande');
-          } finally {
-            setSubmittingCityId(null);
-          }
-        }}
-      />
     </div>
   );
 }

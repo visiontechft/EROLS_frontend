@@ -11,8 +11,6 @@ import type {
   Category,
   City,
   Order,
-  InitiateOrderData,
-  InitiateOrderResponse,
   OrderStats,
   UserStats,
   PaginatedResponse,
@@ -378,16 +376,6 @@ export const citiesApi = {
 
 // ========== Orders API ==========
 export const ordersApi = {
-  initiateOrder: async (data: InitiateOrderData): Promise<InitiateOrderResponse> => {
-    const response = await apiClient.post<InitiateOrderResponse>('/orders/orders/initiate/', data);
-    return response.data;
-  },
-
-  initiateCartOrder: async (data: any): Promise<any> => {
-    const response = await apiClient.post<any>('/orders/orders/initiate_cart/', data);
-    return response.data;
-  },
-
   getOrderHistory: async (): Promise<Order[]> => {
     const response = await apiClient.get<Order[]>('/orders/orders/history/');
     
