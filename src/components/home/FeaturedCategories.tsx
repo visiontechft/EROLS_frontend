@@ -19,23 +19,64 @@ export function FeaturedCategories({ categories, categoryImages }: FeaturedCateg
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-80px' }}
         transition={{ duration: 0.5 }}
-        className="flex items-end justify-between mb-10"
+        className="flex items-end justify-between mb-4 lg:mb-10"
       >
         <div>
-          <p className="text-sm font-bold uppercase tracking-wider text-orange-600 mb-2">
+          <p className="hidden lg:block text-sm font-bold uppercase tracking-wider text-orange-600 mb-2">
             Explorez
           </p>
-          <h2 className="text-3xl lg:text-4xl font-black text-gray-900">Nos catégories</h2>
+          <h2 className="text-lg lg:text-4xl font-black text-gray-900">
+            <span className="lg:hidden">Catégories populaires</span>
+            <span className="hidden lg:inline">Nos catégories</span>
+          </h2>
         </div>
         <Link
           to="/produits"
-          className="hidden sm:flex items-center gap-1.5 text-sm font-bold text-gray-700 hover:text-orange-600 transition-colors"
+          className="flex items-center gap-1.5 text-xs lg:text-sm font-bold text-gray-700 hover:text-orange-600 transition-colors"
         >
-          Tout voir <ArrowUpRight className="h-4 w-4" />
+          <span className="hidden sm:inline">Tout voir</span>
+          <span className="sm:hidden">Voir tout</span>
+          <ArrowUpRight className="h-4 w-4" />
         </Link>
       </motion.div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
+      {/* Mobile: plain image tiles, name below — compact grid of the top 4 */}
+      <div className="lg:hidden grid grid-cols-4 gap-3">
+        {categories.slice(0, 4).map((category, i) => (
+          <motion.div
+            key={category.id}
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.4, delay: i * 0.06 }}
+          >
+            <Link
+              to={`/produits?category=${category.slug}`}
+              className="flex flex-col items-center gap-1.5 active:scale-95 transition-transform"
+            >
+              <div className="h-16 w-16 rounded-2xl overflow-hidden bg-gray-100">
+                {categoryImages[category.id] ? (
+                  <ProductImage
+                    src={categoryImages[category.id]}
+                    alt={category.name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center">
+                    <LayoutGrid className="h-6 w-6 text-gray-300" />
+                  </div>
+                )}
+              </div>
+              <span className="text-[11px] font-semibold text-gray-700 text-center leading-tight line-clamp-2">
+                {category.name}
+              </span>
+            </Link>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Desktop: original image cards with overlay */}
+      <div className="hidden lg:grid grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
         {categories.map((category, i) => (
           <motion.div
             key={category.id}

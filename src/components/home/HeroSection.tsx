@@ -16,12 +16,6 @@ const TRUST_BADGES = [
   { icon: ShieldCheck, label: 'Produits garantis authentiques' },
 ];
 
-const ADVANTAGE_CARDS = [
-  { icon: Truck, label: 'Livraison express' },
-  { icon: Wallet, label: 'Paiement à la livraison' },
-  { icon: ShieldCheck, label: 'Produits authentiques' },
-];
-
 export function HeroSection({ products }: HeroSectionProps) {
   const navigate = useNavigate();
   const [index, setIndex] = useState(0);
@@ -37,7 +31,7 @@ export function HeroSection({ products }: HeroSectionProps) {
   const current = showcase[index];
 
   return (
-    <section className="relative bg-gray-950">
+    <section className="hidden lg:block relative bg-gray-950">
       {/* Ambient gradient glow — animated, keeps the hero from reading flat/black */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <motion.div
@@ -57,121 +51,10 @@ export function HeroSection({ products }: HeroSectionProps) {
         />
       </div>
 
-      {/* Mobile hero — near full first screen, CTAs immediately visible */}
-      <div className="lg:hidden relative px-4 pt-8 pb-6">
-        <motion.span
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-orange-300 backdrop-blur-sm"
-        >
-          EROLS EasyBuy · Bafoussam
-        </motion.span>
-
-        {/* Product visual — clickable mini-card, shows name/price, stays within bounds */}
-        {current && (
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={current.id}
-              className="absolute right-0 top-6 w-28"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1, y: prefersReducedMotion ? 0 : [0, -6, 0] }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{
-                opacity: { duration: 0.4 },
-                scale: { duration: 0.4 },
-                y: { duration: 3.5, repeat: Infinity, ease: 'easeInOut' },
-              }}
-            >
-              <Link
-                to={`/produits/${current.slug}`}
-                className="block overflow-hidden rounded-2xl border border-white/10 shadow-2xl backdrop-blur-sm active:scale-95 transition-transform"
-              >
-                <div className="h-28 w-28 bg-white/[0.06]">
-                  <ProductImage
-                    src={current.image_url}
-                    webpSrc={current.image_url_webp}
-                    alt={current.name}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-                <div className="bg-white/95 px-2 py-1.5">
-                  <p className="truncate text-[10px] font-bold text-gray-900">{current.name}</p>
-                  <p className="text-[11px] font-black text-orange-600">
-                    {formatPrice(current.price)} <span className="text-[9px] font-bold text-gray-500">FCFA</span>
-                  </p>
-                </div>
-              </Link>
-            </motion.div>
-          </AnimatePresence>
-        )}
-
-        <motion.h1
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="mt-6 max-w-[72%] text-[2.15rem] font-black leading-[1.05] text-white text-balance"
-        >
-          Vos produits préférés,
-          <span className="block text-orange-500">livrés chez vous.</span>
-        </motion.h1>
-
-        <motion.p
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.18 }}
-          className="mt-3 max-w-[88%] text-sm text-white/70 font-medium"
-        >
-          Commandez en quelques clics, payez seulement à la réception.
-        </motion.p>
-
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.26 }}
-          className="mt-6 flex flex-col gap-3"
-        >
-          <button
-            onClick={() => navigate('/produits')}
-            className="group inline-flex items-center justify-center gap-2 rounded-full bg-orange-500 px-6 py-4 text-base font-bold text-white shadow-lg shadow-orange-500/30 transition-all active:scale-[0.98]"
-          >
-            Découvrir les produits
-            <ArrowRight className="h-5 w-5 transition-transform group-active:translate-x-1" />
-          </button>
-          <a
-            href={buildWhatsAppUrl(CONTACT.whatsappNumber, "Bonjour, j'ai une question sur vos produits.")}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/5 px-6 py-4 text-base font-bold text-white backdrop-blur-sm transition-all active:scale-[0.98]"
-          >
-            <MessageCircle className="h-5 w-5" />
-            Parler sur WhatsApp
-          </a>
-        </motion.div>
-      </div>
-
-      {/* Floating advantage cards — overlap the hero's bottom edge */}
-      <div className="lg:hidden relative z-10 -mb-6 px-4">
-        <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1">
-          {ADVANTAGE_CARDS.map(({ icon: Icon, label }, i) => (
-            <motion.div
-              key={label}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.3 + i * 0.08 }}
-              className="flex shrink-0 items-center gap-2.5 rounded-2xl border border-white/60 bg-white/90 px-4 py-3.5 shadow-xl backdrop-blur-md"
-            >
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-100">
-                <Icon className="h-4 w-4 text-orange-600" />
-              </div>
-              <span className="whitespace-nowrap text-xs font-bold text-gray-800">{label}</span>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-
-      {/* Desktop hero — unchanged rich layout */}
-      <div className="hidden lg:grid relative max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-24 lg:grid-cols-2 gap-12 items-center">
+      {/* Desktop hero — unchanged rich layout. Mobile now uses a different
+          homepage structure entirely (search -> category icons -> promo
+          banner -> deals), composed directly in Home.tsx. */}
+      <div className="relative max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-24 grid lg:grid-cols-2 gap-12 items-center">
         {/* Left: message */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
