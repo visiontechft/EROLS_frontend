@@ -2,7 +2,6 @@ import { lazy, Suspense, useEffect } from 'react';
 import { HeroSection } from '../components/home/HeroSection';
 import { SearchSection } from '../components/home/SearchSection';
 import { MobileCategoryIcons } from '../components/home/MobileCategoryIcons';
-import { MobilePromoBanner } from '../components/home/MobilePromoBanner';
 import { HomeSkeleton } from '../components/home/HomeSkeleton';
 import { useHomepageData } from '../hooks/queries/useHomepageData';
 import { toast } from 'react-toastify';
@@ -50,7 +49,6 @@ export function Home() {
       <HeroSection products={data.featured} />
       <SearchSection />
       <MobileCategoryIcons categories={data.categories} />
-      <MobilePromoBanner />
 
       <Suspense fallback={null}>
         <DealsSection products={[...data.featured, ...data.popular]} />
