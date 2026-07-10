@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { SlidersHorizontal, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ProductGrid } from '../components/ProductCard';
-import { CategoryPillBar } from '../components/CategoryPillBar';
+import { CategoryIconBar } from '../components/CategoryIconBar';
 import { Button } from '../components/ui/Button';
 import { useProducts } from '../hooks/queries/useProducts';
 import { useCategories, usePrefetchCategoryProducts } from '../hooks/queries/useCategories';
@@ -73,9 +73,9 @@ export function Products() {
         </div>
       </div>
 
-      {/* Category pill bar — primary mobile nav, sticky under the site header (nav + mobile search bar ≈ 122px) */}
+      {/* Category icon bar — same design as the homepage, sticky under the site header (nav + mobile search bar ≈ 122px) */}
       <div className="lg:hidden sticky top-[122px] z-20 bg-gray-50/95 backdrop-blur-sm border-b border-gray-100 py-3">
-        <CategoryPillBar
+        <CategoryIconBar
           categories={categories}
           selected={filters.category}
           onSelect={(slug) => updateFilter('category', slug)}
