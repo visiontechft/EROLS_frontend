@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { SlidersHorizontal, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ProductGrid } from '../components/ProductCard';
@@ -8,12 +8,8 @@ import { useProducts } from '../hooks/queries/useProducts';
 import { useCategories, usePrefetchCategoryProducts } from '../hooks/queries/useCategories';
 import type { ProductFilters } from '../types';
 
-export function Products() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-
-  // Filter states
-  const [filters, setFilters] = useState<ProductFilters>({
+function parseFiltersFromParams(searchParams: URLSearchParams): ProductFilters {
+  return {
     category: searchParams.get('category') || undefined,
     search: searchParams.get('search') || undefined,
     min_price: searchParams.get('min_price') ? Number(searchParams.get('min_price')) : undefined,
@@ -21,7 +17,22 @@ export function Products() {
     sort_by: (searchParams.get('sort_by') as ProductFilters['sort_by']) || undefined,
     page: searchParams.get('page') ? Number(searchParams.get('page')) : 1,
     page_size: 12,
-  });
+  };
+}
+
+export function Products() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+
+  // Filter state — re-synced from the URL whenever it changes, not just at
+  // mount, so a search submitted from the header (a plain navigate(), not
+  // updateFilter()) while already on this page actually takes effect instead
+  // of silently updating the URL with no visible change.
+  const [filters, setFilters] = useState<ProductFilters>(() => parseFiltersFromParams(searchParams));
+
+  useEffect(() => {
+    setFilters(parseFiltersFromParams(searchParams));
+  }, [searchParams]);
 
   const { data: categories = [] } = useCategories();
   const prefetchCategory = usePrefetchCategoryProducts();

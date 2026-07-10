@@ -134,7 +134,13 @@ export function Navbar() {
             className="hidden md:flex items-center flex-1 max-w-md mx-8"
           >
             <div className="relative w-full">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <button
+                type="submit"
+                aria-label="Rechercher"
+                className="absolute left-1 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center rounded-full text-gray-400 hover:text-orange-500 hover:bg-gray-100 transition-colors"
+              >
+                <Search className="h-4 w-4" />
+              </button>
               <input
                 type="text"
                 value={searchQuery}
@@ -233,7 +239,13 @@ export function Navbar() {
           className="md:hidden pb-4"
         >
           <div className="relative flex items-center rounded-full border border-gray-200 bg-white shadow-sm focus-within:ring-2 focus-within:ring-orange-500 transition-shadow">
-            <Search className="absolute left-4 h-4 w-4 text-gray-400 pointer-events-none" />
+            <button
+              type="submit"
+              aria-label="Rechercher"
+              className="absolute left-1 h-8 w-8 flex items-center justify-center rounded-full text-gray-400 hover:text-orange-500 hover:bg-gray-100 transition-colors"
+            >
+              <Search className="h-4 w-4" />
+            </button>
             <input
               type="text"
               value={searchQuery}
