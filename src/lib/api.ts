@@ -271,7 +271,11 @@ export const productsApi = {
     min_price?: number;
     max_price?: number;
   }): Promise<{ updated: number }> => {
-    const response = await apiClient.post<{ updated: number }>('/products/bulk-price-update/', data);
+    // Higher timeout than the global default: this can touch hundreds of
+    // products server-side in one request.
+    const response = await apiClient.post<{ updated: number }>('/products/bulk-price-update/', data, {
+      timeout: 30000,
+    });
     return response.data;
   },
 
@@ -282,7 +286,9 @@ export const productsApi = {
     tiers: { min_price?: number; max_price?: number; bonus: number }[];
     category_id?: number;
   }): Promise<{ updated: number }> => {
-    const response = await apiClient.post<{ updated: number }>('/products/bulk-price-tiers/', data);
+    const response = await apiClient.post<{ updated: number }>('/products/bulk-price-tiers/', data, {
+      timeout: 30000,
+    });
     return response.data;
   },
 
