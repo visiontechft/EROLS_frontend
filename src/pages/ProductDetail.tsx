@@ -1,15 +1,13 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
-  Share2, Star, ChevronLeft, ChevronRight,
-  Truck, Shield, Package, MessageCircle, ShoppingCart, X, Clock, Check, Hand
+  ChevronLeft, ChevronRight,
+  Shield, Package, MessageCircle, ShoppingCart, X, Clock, Check
 } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useProduct, useRelatedProducts } from '../hooks/queries/useProduct';
-import { Button } from '../components/ui/Button';
-import { Badge, StockBadge } from '../components/ui/Badge';
 import { PageLoader } from '../components/ui/LoadingSpinner';
-import { ProductGrid } from '../components/ProductCard';
+import { ProductCard, ProductGrid } from '../components/ProductCard';
 import { buildProductOrderMessage, buildWhatsAppUrl, CONTACT, toNumber, formatPrice } from '../lib/config';
 import { toast } from 'react-toastify';
 
@@ -108,14 +106,6 @@ function ProductImageZoom({ src, alt }: { src: string; alt: string }) {
           />
         )}
 
-        {/* Instruction mobile */}
-        {!mobileZoom && (
-          <div className="lg:hidden absolute bottom-4 left-0 right-0 text-center">
-            <div className="inline-flex items-center gap-2 bg-black/70 text-white px-4 py-2 rounded-full text-xs font-bold backdrop-blur-sm">
-              <Hand size={14} /> Touchez pour zoomer
-            </div>
-          </div>
-        )}
       </div>
 
       {/* ZOOM Desktop (à droite) */}
@@ -272,9 +262,99 @@ export function ProductDetail() {
             )}
           </div>
 
-          {/* COLONNE DROITE : INFOS */}
-          <div className="flex flex-col gap-6">
-            
+          {/* COLONNE DROITE : INFOS — mobile compact, texte réduit au essentiel */}
+          <div className="lg:hidden flex flex-col gap-4">
+            {product.category && (
+              <span className="text-[11px] font-bold uppercase tracking-wide text-orange-600">
+                {product.category.name}
+              </span>
+            )}
+
+            <h1 className="text-xl font-black text-gray-900 leading-snug -mt-2">{product.name}</h1>
+
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                {hasDiscount && (
+                  <span className="block text-xs text-gray-400 line-through">
+                    {formatPrice(originalPrice!)} FCFA
+                  </span>
+                )}
+                <span className="text-3xl font-black text-orange-500">
+                  {formatPrice(price)} <span className="text-sm font-bold text-gray-500">FCFA</span>
+                </span>
+              </div>
+              {product.stock && product.stock > 0 ? (
+                <span className="shrink-0 inline-flex items-center gap-1 bg-green-50 text-green-700 px-3 py-1.5 rounded-full text-xs font-bold">
+                  <Check size={14} /> En stock
+                </span>
+              ) : (
+                <span className="shrink-0 inline-flex items-center gap-1 bg-red-50 text-red-700 px-3 py-1.5 rounded-full text-xs font-bold">
+                  <X size={14} /> Rupture
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-bold text-gray-700">Quantité</span>
+              <div className="flex items-center rounded-full border border-gray-200 overflow-hidden">
+                <button
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="w-9 h-9 flex items-center justify-center bg-gray-50 active:bg-gray-200 font-bold text-gray-700 transition-colors"
+                >
+                  -
+                </button>
+                <span className="w-10 text-center font-black text-gray-900">{quantity}</span>
+                <button
+                  onClick={() => setQuantity(quantity + 1)}
+                  className="w-9 h-9 flex items-center justify-center bg-gray-50 active:bg-gray-200 font-bold text-gray-700 transition-colors"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2.5 pt-1">
+              <button
+                onClick={handleOrderNow}
+                disabled={!product.stock || product.stock === 0}
+                className="flex items-center justify-center gap-2.5 bg-green-600 text-white py-4 rounded-2xl font-bold active:scale-[0.98] transition-transform disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+              >
+                <MessageCircle size={20} /> Commander via WhatsApp
+              </button>
+              <button
+                onClick={() => { addToCart(product, quantity); toast.success(`${quantity} article(s) ajouté(s)`); }}
+                disabled={!product.stock || product.stock === 0}
+                className="flex items-center justify-center gap-2.5 border-2 border-gray-200 text-gray-800 py-3.5 rounded-2xl font-bold active:scale-[0.98] transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ShoppingCart size={18} /> Ajouter au panier
+              </button>
+            </div>
+
+            {product.description && (
+              <p className="text-sm text-gray-600 leading-relaxed pt-2 border-t border-gray-100">
+                {product.description}
+              </p>
+            )}
+
+            <div className="flex items-center justify-between gap-2 pt-4 border-t border-gray-100">
+              <div className="flex flex-col items-center text-center gap-1 flex-1">
+                <Clock className="text-orange-500" size={20} />
+                <span className="text-[11px] font-bold text-gray-600">10 min - 1h</span>
+              </div>
+              <div className="flex flex-col items-center text-center gap-1 flex-1">
+                <Shield className="text-green-600" size={20} />
+                <span className="text-[11px] font-bold text-gray-600">Paiement livraison</span>
+              </div>
+              <div className="flex flex-col items-center text-center gap-1 flex-1">
+                <Package className="text-blue-600" size={20} />
+                <span className="text-[11px] font-bold text-gray-600">Authentique</span>
+              </div>
+            </div>
+          </div>
+
+          {/* COLONNE DROITE : INFOS — desktop */}
+          <div className="hidden lg:flex flex-col gap-6">
+
             {/* Badge catégorie */}
             {product.category && (
               <div className="inline-flex w-fit">
@@ -285,15 +365,9 @@ export function ProductDetail() {
             )}
 
             <div>
-              <h1 className="text-3xl lg:text-4xl font-black text-gray-900 leading-tight mb-4">
+              <h1 className="text-3xl lg:text-4xl font-black text-gray-900 leading-tight">
                 {product.name}
               </h1>
-              <div className="flex items-center gap-3">
-                 <div className="flex items-center gap-1 text-yellow-500">
-                   {[...Array(5)].map((_, i) => <Star key={i} size={20} fill="currentColor" />)}
-                 </div>
-                 <span className="text-gray-500 text-sm font-bold">(4.8/5 • 12 avis)</span>
-              </div>
             </div>
 
             {/* Prix */}
@@ -325,28 +399,30 @@ export function ProductDetail() {
                 </div>
               )}
             </div>
-            
+
             {/* Description */}
-            <div className="bg-white p-6 rounded-2xl border-2 border-gray-100 shadow-sm">
-              <h3 className="font-black text-lg text-gray-900 mb-3 flex items-center gap-2">
-                <Package size={20} className="text-orange-500" />
-                Description du produit
-              </h3>
-              <p className="text-gray-600 leading-relaxed">{product.description}</p>
-            </div>
+            {product.description && (
+              <div className="bg-white p-6 rounded-2xl border-2 border-gray-100 shadow-sm">
+                <h3 className="font-black text-lg text-gray-900 mb-3 flex items-center gap-2">
+                  <Package size={20} className="text-orange-500" />
+                  Description du produit
+                </h3>
+                <p className="text-gray-600 leading-relaxed">{product.description}</p>
+              </div>
+            )}
 
             {/* Quantité */}
             <div className="flex items-center gap-4">
               <span className="font-bold text-gray-700">Quantité :</span>
               <div className="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden">
-                <button 
+                <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   className="px-4 py-2 bg-gray-100 hover:bg-gray-200 font-bold text-gray-700 transition-colors"
                 >
                   -
                 </button>
                 <span className="px-6 py-2 font-black text-gray-900">{quantity}</span>
-                <button 
+                <button
                   onClick={() => setQuantity(quantity + 1)}
                   className="px-4 py-2 bg-gray-100 hover:bg-gray-200 font-bold text-gray-700 transition-colors"
                 >
@@ -357,14 +433,14 @@ export function ProductDetail() {
 
             {/* Boutons d'action */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
-              <button 
+              <button
                 onClick={() => { addToCart(product, quantity); toast.success(`${quantity} article(s) ajouté(s)`); }}
                 disabled={!product.stock || product.stock === 0}
                 className="flex items-center justify-center gap-3 bg-gray-900 text-white py-4 rounded-xl font-bold hover:bg-gray-800 transition-all text-base disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
               >
                 <ShoppingCart size={20} /> Ajouter au panier
               </button>
-              <button 
+              <button
                 onClick={handleOrderNow}
                 disabled={!product.stock || product.stock === 0}
                 className="flex items-center justify-center gap-3 bg-green-600 text-white py-4 rounded-xl font-bold hover:bg-green-700 transition-all text-base disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
@@ -403,11 +479,20 @@ export function ProductDetail() {
 
         {/* PRODUITS DE LA MÊME CATÉGORIE */}
         {relatedProducts.length > 0 && (
-          <div className="mt-16 pt-10 border-t-2 border-gray-200">
-            <h2 className="text-2xl font-black text-gray-900 mb-6">
+          <div className="mt-10 lg:mt-16 pt-8 lg:pt-10 border-t-2 border-gray-200">
+            <h2 className="text-lg lg:text-2xl font-black text-gray-900 mb-4 lg:mb-6">
               Vous aimerez aussi
             </h2>
-            <ProductGrid products={relatedProducts} />
+            <div className="lg:hidden -mx-4 px-4 flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide">
+              {relatedProducts.map((p) => (
+                <div key={p.id} className="snap-start shrink-0 w-[160px]">
+                  <ProductCard product={p} />
+                </div>
+              ))}
+            </div>
+            <div className="hidden lg:block">
+              <ProductGrid products={relatedProducts} />
+            </div>
           </div>
         )}
       </div>
